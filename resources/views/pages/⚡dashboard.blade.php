@@ -196,10 +196,10 @@ new #[Title('Dashboard')] class extends Component {
                         <svg class="w-4 h-4 text-violet-600 dark:text-violet-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                     </div>
                 </div>
-                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">${{ number_format($this->totalRevenue, 0) }}</p>
+                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">UGX {{ number_format($this->totalRevenue, 0) }}</p>
                 <div class="flex items-center gap-2 mt-1 text-xs">
                     @if ($this->outstandingRevenue > 0)
-                        <span class="text-amber-600 dark:text-amber-400 font-medium">${{ number_format($this->outstandingRevenue, 0) }} outstanding</span>
+                        <span class="text-amber-600 dark:text-amber-400 font-medium">UGX {{ number_format($this->outstandingRevenue, 0) }} outstanding</span>
                     @else
                         <span class="text-zinc-400 dark:text-zinc-500">All paid</span>
                     @endif

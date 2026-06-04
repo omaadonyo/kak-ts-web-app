@@ -86,13 +86,13 @@
                 <tr>
                     <td>{{ $item['description'] ?? 'Item' }}</td>
                     <td>{{ $item['quantity'] ?? 1 }}</td>
-                    <td class="amount">${{ number_format($item['unit_price'] ?? 0, 2) }}</td>
-                    <td class="amount">${{ number_format($item['total'] ?? 0, 2) }}</td>
+                    <td class="amount">UGX {{ number_format($item['unit_price'] ?? 0, 2) }}</td>
+                    <td class="amount">UGX {{ number_format($item['total'] ?? 0, 2) }}</td>
                 </tr>
                 @endforeach
-                <tr><td colspan="3" style="text-align:right; padding-right:12px; color:#6b7280;">Subtotal</td><td class="amount">${{ number_format($bs->quotation->subtotal, 2) }}</td></tr>
-                <tr><td colspan="3" style="text-align:right; padding-right:12px; color:#6b7280;">Tax</td><td class="amount">${{ number_format($bs->quotation->tax, 2) }}</td></tr>
-                <tr class="total-row"><td colspan="3" style="text-align:right; padding-right:12px;">Total</td><td class="amount">${{ number_format($bs->quotation->total, 2) }}</td></tr>
+                <tr><td colspan="3" style="text-align:right; padding-right:12px; color:#6b7280;">Subtotal</td><td class="amount">UGX {{ number_format($bs->quotation->subtotal, 2) }}</td></tr>
+                <tr><td colspan="3" style="text-align:right; padding-right:12px; color:#6b7280;">Tax</td><td class="amount">UGX {{ number_format($bs->quotation->tax, 2) }}</td></tr>
+                <tr class="total-row"><td colspan="3" style="text-align:right; padding-right:12px;">Total</td><td class="amount">UGX {{ number_format($bs->quotation->total, 2) }}</td></tr>
             </tbody>
         </table>
     </div>
@@ -126,7 +126,7 @@
         <table class="details">
             <tr><td>Invoice #</td><td>{{ $bs->invoice->invoice_number }}</td></tr>
             <tr><td>Status</td><td><span class="badge badge-{{ $bs->invoice->status }}">{{ $bs->invoice->status }}</span></td></tr>
-            <tr><td>Total</td><td><strong>${{ number_format($bs->invoice->total, 2) }}</strong></td></tr>
+            <tr><td>Total</td><td><strong>UGX {{ number_format($bs->invoice->total, 2) }}</strong></td></tr>
         </table>
     </div>
     @endif

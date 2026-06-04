@@ -114,11 +114,11 @@ new #[Title('Reports')] class extends Component {
                 </div>
                 <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5">
                     <p class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Total Revenue</p>
-                    <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">${{ number_format($this->totalRevenue, 2) }}</p>
+                    <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">UGX {{ number_format($this->totalRevenue, 2) }}</p>
                 </div>
                 <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5">
                     <p class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Pending Revenue</p>
-                    <p class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">${{ number_format($this->pendingRevenue, 2) }}</p>
+                    <p class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">UGX {{ number_format($this->pendingRevenue, 2) }}</p>
                 </div>
             </div>
 
@@ -268,7 +268,7 @@ new #[Title('Reports')] class extends Component {
                                     <span class="truncate text-zinc-600 dark:text-zinc-400">{{ $invoice->bookService?->user?->name ?? 'N/A' }}</span>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
-                                    <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($invoice->total, 2) }}</span>
+                                    <span class="font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format($invoice->total, 2) }}</span>
                                     @php
                                         $s = $invoice->status;
                                         $c = $s === 'paid' ? 'text-emerald-600 dark:text-emerald-400' : ($s === 'overdue' ? 'text-red-600 dark:text-red-400' : 'text-zinc-400');

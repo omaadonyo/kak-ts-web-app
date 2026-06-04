@@ -174,7 +174,7 @@ new #[Title('Assessments')] class extends Component {
                         <div class="px-6 py-3 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-700">
                             <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-                                <span>Quotation generated — <strong>${{ number_format($assessment->quotation->total, 2) }}</strong></span>
+                                <span>Quotation generated — <strong>UGX {{ number_format($assessment->quotation->total, 2) }}</strong></span>
                                 <flux:button href="{{ route('quotations.show', $assessment->book_service_id) }}" size="xs" variant="ghost" wire:navigate class="ml-auto">View</flux:button>
                             </div>
                         </div>

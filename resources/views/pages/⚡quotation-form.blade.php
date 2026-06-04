@@ -167,7 +167,7 @@ new #[Title('Quotation')] class extends Component {
                                         <input type="number" step="0.01" min="0" wire:model.live="lineItems.{{ $i }}.unit_price"
                                                class="w-full border border-zinc-200 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-right text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-800/20 dark:focus:ring-zinc-400/20 focus:border-zinc-800 dark:focus:border-zinc-400">
                                     </td>
-                                    <td class="p-2 text-right text-sm font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($item['total'] ?? 0, 2) }}</td>
+                                    <td class="p-2 text-right text-sm font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format($item['total'] ?? 0, 2) }}</td>
                                     <td class="p-2 text-center">
                                         @if (count($lineItems) > 1)
                                             <button type="button" wire:click="removeItem({{ $i }})" class="text-red-400 hover:text-red-600 transition-colors text-lg leading-none">&times;</button>
@@ -201,15 +201,15 @@ new #[Title('Quotation')] class extends Component {
                                 @if ($item['description'])
                                     <div class="flex justify-between text-sm">
                                         <span class="text-zinc-600 dark:text-zinc-400 truncate">{{ $item['description'] }}</span>
-                                        <span class="text-zinc-800 dark:text-zinc-200 font-medium shrink-0 ml-4">${{ number_format($item['total'] ?? 0, 2) }}</span>
+                                        <span class="text-zinc-800 dark:text-zinc-200 font-medium shrink-0 ml-4">UGX {{ number_format($item['total'] ?? 0, 2) }}</span>
                                     </div>
                                 @endif
                             @endforeach
                         </div>
                         <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-700 space-y-1 text-right">
-                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Subtotal: <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($this->subtotal, 2) }}</span></p>
-                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Tax ({{ $taxPercent }}%): <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($this->taxAmount, 2) }}</span></p>
-                            <p class="text-base font-bold text-zinc-800 dark:text-zinc-100">Total: ${{ number_format($this->grandTotal, 2) }}</p>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Subtotal: <span class="font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format($this->subtotal, 2) }}</span></p>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Tax ({{ $taxPercent }}%): <span class="font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format($this->taxAmount, 2) }}</span></p>
+                            <p class="text-base font-bold text-zinc-800 dark:text-zinc-100">Total: UGX {{ number_format($this->grandTotal, 2) }}</p>
                         </div>
                     </div>
                 </div>
@@ -239,15 +239,15 @@ new #[Title('Quotation')] class extends Component {
                             @if ($item['description'])
                                 <div class="flex justify-between text-sm">
                                     <span class="text-zinc-600 dark:text-zinc-400">{{ $item['description'] }}</span>
-                                    <span class="text-zinc-800 dark:text-zinc-200 font-medium shrink-0 ml-4">${{ number_format($item['total'] ?? 0, 2) }}</span>
+                                    <span class="text-zinc-800 dark:text-zinc-200 font-medium shrink-0 ml-4">UGX {{ number_format($item['total'] ?? 0, 2) }}</span>
                                 </div>
                             @endif
                         @endforeach
                     </div>
                     <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-700 space-y-1 text-right">
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Subtotal: <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($quotation->subtotal, 2) }}</span></p>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Tax: <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($quotation->tax, 2) }}</span></p>
-                        <p class="text-base font-bold text-zinc-800 dark:text-zinc-100">Total: ${{ number_format($quotation->total, 2) }}</p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Subtotal: <span class="font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format($quotation->subtotal, 2) }}</span></p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Tax: <span class="font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format($quotation->tax, 2) }}</span></p>
+                        <p class="text-base font-bold text-zinc-800 dark:text-zinc-100">Total: UGX {{ number_format($quotation->total, 2) }}</p>
                     </div>
                     @if ($quotation->notes)
                         <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-700">

@@ -119,22 +119,22 @@ new #[Title('Project Report')] class extends Component {
                             <div class="flex items-center justify-between text-sm py-2 border-b border-zinc-100 dark:border-zinc-700 last:border-0">
                                 <div>
                                     <p class="font-medium text-zinc-700 dark:text-zinc-300">{{ $item['description'] ?? 'Item' }}</p>
-                                    <p class="text-xs text-zinc-400 dark:text-zinc-500">Qty: {{ $item['quantity'] ?? 1 }} &times; ${{ number_format($item['unit_price'] ?? 0, 2) }}</p>
+                                    <p class="text-xs text-zinc-400 dark:text-zinc-500">Qty: {{ $item['quantity'] ?? 1 }} &times; UGX {{ number_format($item['unit_price'] ?? 0, 2) }}</p>
                                 </div>
-                                <span class="font-medium text-zinc-800 dark:text-zinc-200">${{ number_format($item['total'] ?? 0, 2) }}</span>
+                                <span class="font-medium text-zinc-800 dark:text-zinc-200">UGX {{ number_format($item['total'] ?? 0, 2) }}</span>
                             </div>
                         @endforeach
                         <div class="flex items-center justify-between pt-2 text-sm">
                             <span class="text-zinc-500 dark:text-zinc-400">Subtotal</span>
-                            <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($bs->quotation->subtotal, 2) }}</span>
+                            <span class="font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format($bs->quotation->subtotal, 2) }}</span>
                         </div>
                         <div class="flex items-center justify-between text-sm">
                             <span class="text-zinc-500 dark:text-zinc-400">Tax</span>
-                            <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($bs->quotation->tax, 2) }}</span>
+                            <span class="font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format($bs->quotation->tax, 2) }}</span>
                         </div>
                         <div class="flex items-center justify-between text-base font-bold pt-2 border-t border-zinc-200 dark:border-zinc-600">
                             <span class="text-zinc-800 dark:text-zinc-100">Total</span>
-                            <span class="text-zinc-800 dark:text-zinc-100">${{ number_format($bs->quotation->total, 2) }}</span>
+                            <span class="text-zinc-800 dark:text-zinc-100">UGX {{ number_format($bs->quotation->total, 2) }}</span>
                         </div>
                     </div>
                 @else
@@ -187,7 +187,7 @@ new #[Title('Project Report')] class extends Component {
                     </div>
                     <div class="flex items-center justify-between text-base font-bold pt-2 border-t border-zinc-200 dark:border-zinc-600">
                         <span class="text-zinc-800 dark:text-zinc-100">Total</span>
-                        <span class="text-zinc-800 dark:text-zinc-100">${{ number_format($bs->invoice->total, 2) }}</span>
+                        <span class="text-zinc-800 dark:text-zinc-100">UGX {{ number_format($bs->invoice->total, 2) }}</span>
                     </div>
                 </div>
             @endif

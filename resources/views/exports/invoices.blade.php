@@ -22,7 +22,7 @@
                 <td>{{ $i->bookService->user->name }}</td>
                 <td>{{ $i->bookService->service_type }}</td>
                 <td>{{ $i->bookService->location }}</td>
-                <td>${{ number_format($i->total, 2) }}</td>
+                <td>UGX {{ number_format($i->total, 2) }}</td>
                 <td>{{ $i->status }}</td>
                 <td>{{ $i->created_at->format('Y-m-d') }}</td>
             </tr>

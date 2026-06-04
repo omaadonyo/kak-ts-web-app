@@ -176,7 +176,7 @@ new #[Title('Quotations')] class extends Component {
                                     @foreach (array_slice($quotation->line_items ?? [], 0, 3) as $item)
                                         <div class="flex items-center justify-between text-sm">
                                             <span class="text-zinc-600 dark:text-zinc-400 truncate">{{ $item['description'] ?? 'Item' }}</span>
-                                            <span class="text-zinc-700 dark:text-zinc-300 font-medium shrink-0 ml-4">${{ number_format($item['total'] ?? 0, 2) }}</span>
+                                            <span class="text-zinc-700 dark:text-zinc-300 font-medium shrink-0 ml-4">UGX {{ number_format($item['total'] ?? 0, 2) }}</span>
                                         </div>
                                     @endforeach
                                     @if (count($quotation->line_items ?? []) > 3)
@@ -187,15 +187,15 @@ new #[Title('Quotations')] class extends Component {
                                 <div class="flex items-center gap-4 mt-4 pl-13 pt-3 border-t border-zinc-100 dark:border-zinc-700">
                                     <div>
                                         <p class="text-xs text-zinc-400 dark:text-zinc-500">Subtotal</p>
-                                        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($quotation->subtotal, 2) }}</p>
+                                        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format($quotation->subtotal, 2) }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs text-zinc-400 dark:text-zinc-500">Tax</p>
-                                        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($quotation->tax, 2) }}</p>
+                                        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format($quotation->tax, 2) }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs text-zinc-400 dark:text-zinc-500">Total</p>
-                                        <p class="text-base font-bold text-zinc-800 dark:text-zinc-100">${{ number_format($quotation->total, 2) }}</p>
+                                        <p class="text-base font-bold text-zinc-800 dark:text-zinc-100">UGX {{ number_format($quotation->total, 2) }}</p>
                                     </div>
                                 </div>
                             </div>

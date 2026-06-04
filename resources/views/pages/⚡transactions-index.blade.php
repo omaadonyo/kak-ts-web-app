@@ -180,7 +180,7 @@ new #[Title('Transactions')] class extends Component {
                                 <td class="py-3 px-4 font-mono text-xs text-zinc-500 dark:text-zinc-400">{{ $txn['number'] }}</td>
                                 <td class="py-3 px-4 text-zinc-700 dark:text-zinc-300">{{ $txn['client'] }}</td>
                                 <td class="py-3 px-4 text-zinc-500 dark:text-zinc-400 capitalize">{{ $txn['service'] }}</td>
-                                <td class="py-3 px-4 text-right font-medium text-zinc-800 dark:text-zinc-200">${{ number_format($txn['amount'], 2) }}</td>
+                                <td class="py-3 px-4 text-right font-medium text-zinc-800 dark:text-zinc-200">UGX {{ number_format($txn['amount'], 2) }}</td>
                                 <td class="py-3 px-4">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize {{ $statusStyles[$txn['status']] ?? '' }}">{{ $txn['status'] }}</span>
                                 </td>

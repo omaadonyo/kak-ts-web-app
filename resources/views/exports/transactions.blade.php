@@ -21,7 +21,7 @@
                 <td>{{ $t['number'] }}</td>
                 <td>{{ $t['client'] }}</td>
                 <td>{{ $t['service'] }}</td>
-                <td>${{ number_format($t['amount'], 2) }}</td>
+                <td>UGX {{ number_format($t['amount'], 2) }}</td>
                 <td>{{ $t['status'] }}</td>
                 <td>{{ $t['date']->format('Y-m-d') }}</td>
             </tr>

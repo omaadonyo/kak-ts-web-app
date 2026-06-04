@@ -21,7 +21,7 @@
                 <td>{{ $q->bookService->user->name }}</td>
                 <td>{{ $q->bookService->service_type }}</td>
                 <td>{{ $q->bookService->location }}</td>
-                <td>${{ number_format($q->total, 2) }}</td>
+                <td>UGX {{ number_format($q->total, 2) }}</td>
                 <td>{{ $q->status }}</td>
                 <td>{{ $q->valid_until?->format('Y-m-d') ?? '-' }}</td>
                 <td>{{ $q->created_at->format('Y-m-d') }}</td>
