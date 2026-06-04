@@ -16,10 +16,13 @@ new #[Title('Quotation')] class extends Component {
     public string $notes = '';
     public string $status = 'draft';
 
+    public bool $isEditable = false;
+
     public function mount(BookService $bookService): void
     {
         $this->bookService = $bookService;
         $this->quotation = $bookService->quotation;
+        $this->isEditable = Auth::user()->isAdmin() || Auth::user()->isTechnician();
 
         if ($this->quotation) {
             $this->lineItems = $this->quotation->line_items;
@@ -131,101 +134,151 @@ new #[Title('Quotation')] class extends Component {
         </div>
     </div>
 
-    <form wire:submit="save" class="space-y-6">
-        <div class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-700 flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Line Items</h3>
-                <button type="button" wire:click="addItem" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">+ Add Item</button>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr class="text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-800/50">
-                            <th class="p-3 pl-6 text-left font-medium">Description</th>
-                            <th class="p-3 text-center font-medium w-20">Qty</th>
-                            <th class="p-3 text-right font-medium w-28">Unit Price</th>
-                            <th class="p-3 text-right font-medium w-24">Total</th>
-                            <th class="p-3 w-10"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($lineItems as $i => $item)
-                            <tr class="border-t border-zinc-100 dark:border-zinc-700">
-                                <td class="p-2 pl-6">
-                                    <input type="text" wire:model="lineItems.{{ $i }}.description" placeholder="Item description"
-                                           class="w-full border border-zinc-200 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-800/20 dark:focus:ring-zinc-400/20 focus:border-zinc-800 dark:focus:border-zinc-400">
-                                </td>
-                                <td class="p-2">
-                                    <input type="number" step="0.01" min="0.01" wire:model.live="lineItems.{{ $i }}.quantity"
-                                           class="w-full border border-zinc-200 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-center text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-800/20 dark:focus:ring-zinc-400/20 focus:border-zinc-800 dark:focus:border-zinc-400">
-                                </td>
-                                <td class="p-2">
-                                    <input type="number" step="0.01" min="0" wire:model.live="lineItems.{{ $i }}.unit_price"
-                                           class="w-full border border-zinc-200 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-right text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-800/20 dark:focus:ring-zinc-400/20 focus:border-zinc-800 dark:focus:border-zinc-400">
-                                </td>
-                                <td class="p-2 text-right text-sm font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($item['total'] ?? 0, 2) }}</td>
-                                <td class="p-2 text-center">
-                                    @if (count($lineItems) > 1)
-                                        <button type="button" wire:click="removeItem({{ $i }})" class="text-red-400 hover:text-red-600 transition-colors text-lg leading-none">&times;</button>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-6">
-            <div class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm p-6 space-y-4">
-                <flux:input type="number" step="0.01" min="0" max="100" wire:model.live="taxPercent" label="Tax (%)" />
-                <flux:input type="date" wire:model="validUntil" label="Valid Until" />
-                <flux:textarea wire:model="notes" label="Notes / Terms" placeholder="Payment terms, warranty, etc..." rows="3" />
-            </div>
-
+    @if ($isEditable)
+        <form wire:submit="save" class="space-y-6">
             <div class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-700">
-                    <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Preview</h3>
+                <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-700 flex items-center justify-between">
+                    <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Line Items</h3>
+                    <button type="button" wire:click="addItem" class="text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">+ Add Item</button>
                 </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-800/50">
+                                <th class="p-3 pl-6 text-left font-medium">Description</th>
+                                <th class="p-3 text-center font-medium w-20">Qty</th>
+                                <th class="p-3 text-right font-medium w-28">Unit Price</th>
+                                <th class="p-3 text-right font-medium w-24">Total</th>
+                                <th class="p-3 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($lineItems as $i => $item)
+                                <tr class="border-t border-zinc-100 dark:border-zinc-700">
+                                    <td class="p-2 pl-6">
+                                        <input type="text" wire:model="lineItems.{{ $i }}.description" placeholder="Item description"
+                                               class="w-full border border-zinc-200 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-800/20 dark:focus:ring-zinc-400/20 focus:border-zinc-800 dark:focus:border-zinc-400">
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="number" step="0.01" min="0.01" wire:model.live="lineItems.{{ $i }}.quantity"
+                                               class="w-full border border-zinc-200 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-center text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-800/20 dark:focus:ring-zinc-400/20 focus:border-zinc-800 dark:focus:border-zinc-400">
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="number" step="0.01" min="0" wire:model.live="lineItems.{{ $i }}.unit_price"
+                                               class="w-full border border-zinc-200 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-right text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-800/20 dark:focus:ring-zinc-400/20 focus:border-zinc-800 dark:focus:border-zinc-400">
+                                    </td>
+                                    <td class="p-2 text-right text-sm font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($item['total'] ?? 0, 2) }}</td>
+                                    <td class="p-2 text-center">
+                                        @if (count($lineItems) > 1)
+                                            <button type="button" wire:click="removeItem({{ $i }})" class="text-red-400 hover:text-red-600 transition-colors text-lg leading-none">&times;</button>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
+                <div class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm p-6 space-y-4">
+                    <flux:input type="number" step="0.01" min="0" max="100" wire:model.live="taxPercent" label="Tax (%)" />
+                    <flux:input type="date" wire:model="validUntil" label="Valid Until" />
+                    <flux:textarea wire:model="notes" label="Notes / Terms" placeholder="Payment terms, warranty, etc..." rows="3" />
+                </div>
+
+                <div class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-700">
+                        <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Preview</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="text-center mb-4">
+                            <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 tracking-widest uppercase">Quotation</p>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-400 capitalize mt-1">{{ $bookService->service_type }} &mdash; {{ $bookService->location }}</p>
+                        </div>
+                        <div class="space-y-2">
+                            @foreach ($lineItems as $item)
+                                @if ($item['description'])
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-zinc-600 dark:text-zinc-400 truncate">{{ $item['description'] }}</span>
+                                        <span class="text-zinc-800 dark:text-zinc-200 font-medium shrink-0 ml-4">${{ number_format($item['total'] ?? 0, 2) }}</span>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-700 space-y-1 text-right">
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Subtotal: <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($this->subtotal, 2) }}</span></p>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Tax ({{ $taxPercent }}%): <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($this->taxAmount, 2) }}</span></p>
+                            <p class="text-base font-bold text-zinc-800 dark:text-zinc-100">Total: ${{ number_format($this->grandTotal, 2) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <flux:button variant="primary" type="submit">{{ $quotation ? 'Update Quotation' : 'Generate Quotation' }}</flux:button>
+                <flux:button href="{{ route('book-services') }}" variant="ghost" wire:navigate>Back</flux:button>
+            </div>
+        </form>
+
+        @if ($quotation && $status === 'draft')
+            <div class="flex gap-3">
+                <flux:button wire:click="markSent" variant="primary">Mark as Sent</flux:button>
+            </div>
+        @endif
+    @else
+        @if ($quotation)
+            <div class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden">
                 <div class="p-6">
                     <div class="text-center mb-4">
                         <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 tracking-widest uppercase">Quotation</p>
                         <p class="text-sm text-zinc-600 dark:text-zinc-400 capitalize mt-1">{{ $bookService->service_type }} &mdash; {{ $bookService->location }}</p>
                     </div>
                     <div class="space-y-2">
-                        @foreach ($lineItems as $item)
+                        @foreach ($quotation->line_items as $item)
                             @if ($item['description'])
                                 <div class="flex justify-between text-sm">
-                                    <span class="text-zinc-600 dark:text-zinc-400 truncate">{{ $item['description'] }}</span>
+                                    <span class="text-zinc-600 dark:text-zinc-400">{{ $item['description'] }}</span>
                                     <span class="text-zinc-800 dark:text-zinc-200 font-medium shrink-0 ml-4">${{ number_format($item['total'] ?? 0, 2) }}</span>
                                 </div>
                             @endif
                         @endforeach
                     </div>
                     <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-700 space-y-1 text-right">
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Subtotal: <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($this->subtotal, 2) }}</span></p>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Tax ({{ $taxPercent }}%): <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($this->taxAmount, 2) }}</span></p>
-                        <p class="text-base font-bold text-zinc-800 dark:text-zinc-100">Total: ${{ number_format($this->grandTotal, 2) }}</p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Subtotal: <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($quotation->subtotal, 2) }}</span></p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Tax: <span class="font-medium text-zinc-700 dark:text-zinc-300">${{ number_format($quotation->tax, 2) }}</span></p>
+                        <p class="text-base font-bold text-zinc-800 dark:text-zinc-100">Total: ${{ number_format($quotation->total, 2) }}</p>
                     </div>
+                    @if ($quotation->notes)
+                        <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-700">
+                            <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 mb-1">Notes / Terms</p>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap">{{ $quotation->notes }}</p>
+                        </div>
+                    @endif
+                    @if ($quotation->valid_until)
+                        <div class="mt-3 text-xs text-zinc-400 dark:text-zinc-500">
+                            Valid until: {{ $quotation->valid_until->format('M d, Y') }}
+                        </div>
+                    @endif
                 </div>
             </div>
-        </div>
 
-        <div class="flex items-center gap-3">
-            <flux:button variant="primary" type="submit">{{ $quotation ? 'Update Quotation' : 'Generate Quotation' }}</flux:button>
-            <flux:button href="{{ route('book-services') }}" variant="ghost" wire:navigate>Back</flux:button>
-        </div>
-    </form>
-
-    @if ($quotation && $status === 'draft')
-        <div class="flex gap-3">
-            <flux:button wire:click="markSent" variant="primary">Mark as Sent</flux:button>
-        </div>
+            <div class="flex gap-3">
+                <flux:button href="{{ route('book-services') }}" variant="ghost" wire:navigate>Back</flux:button>
+            </div>
+        @else
+            <div class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm p-6 text-center">
+                <p class="text-zinc-500 dark:text-zinc-400">Quotation has not been generated yet.</p>
+                <flux:button href="{{ route('book-services') }}" variant="ghost" wire:navigate class="mt-4">Back</flux:button>
+            </div>
+        @endif
     @endif
 
     @if ($quotation && $status === 'sent')
         <div class="flex gap-3">
-            <flux:button wire:click="markAccepted" variant="primary" class="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">Accept &amp; Start Project</flux:button>
+            @can('accept-quotation', $quotation)
+                <flux:button wire:click="markAccepted" variant="primary" class="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">Accept &amp; Start Project</flux:button>
+            @endcan
         </div>
     @endif
 </div>

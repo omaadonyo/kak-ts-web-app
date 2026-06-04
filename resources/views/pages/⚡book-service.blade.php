@@ -26,9 +26,9 @@ new #[Title('Book a Service')] class extends Component {
             'location' => ['required', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'photos' => ['required', 'array', 'min:2', 'max:5'],
-            'photos.*' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+            'photos.*' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
         ];
-        if (Auth::user()->isAdmin()) {
+        if (Auth::user()->isAdmin() || Auth::user()->isCompany()) {
             $rules['client_id'] = ['required', 'exists:users,id'];
         }
         return $rules;
@@ -70,7 +70,7 @@ new #[Title('Book a Service')] class extends Component {
         }
 
         BookService::create([
-            'user_id' => Auth::user()->isAdmin() ? $this->client_id : Auth::id(),
+            'user_id' => (Auth::user()->isAdmin() || Auth::user()->isCompany()) ? $this->client_id : Auth::id(),
             'service_type' => $this->service_type,
             'location' => $this->location,
             'notes' => $this->notes,
@@ -112,18 +112,19 @@ new #[Title('Book a Service')] class extends Component {
         </div>
 
         <div class="w-full md:w-1/2 md:mx-auto">
-            @can('manage-users')
+            @php $showClientSelector = Auth::user()->isAdmin() || Auth::user()->isCompany(); @endphp
+            @if ($showClientSelector)
                 <div class="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700/50 shadow-sm p-6 md:p-8 mb-6">
                     <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Client <span class="text-zinc-400">*</span></label>
                     <select wire:model="client_id" class="mt-1 w-full border border-zinc-200 dark:border-zinc-600 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-900/20">
                         <option value="">Select a client...</option>
-                        @foreach (\App\Models\User::where('role', 'client')->orderBy('name')->get() as $client)
+                        @foreach (Auth::user()->isAdmin() ? \App\Models\User::where('role', 'client')->orderBy('name')->get() : Auth::user()->companyUsers()->orderBy('name')->get() as $client)
                             <option value="{{ $client->id }}">{{ $client->name }} ({{ $client->email }})</option>
                         @endforeach
                     </select>
                     @error('client_id') <p class="mt-1.5 text-sm text-red-500 dark:text-red-400">{{ $message }}</p> @enderror
                 </div>
-            @endcan
+            @endif
 
             <form wire:submit="save" class="space-y-6">
 
@@ -230,7 +231,7 @@ new #[Title('Book a Service')] class extends Component {
                              wire:ignore>
                             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-300 dark:text-zinc-600 mb-3"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
                             <p class="text-sm text-zinc-600 dark:text-zinc-400 font-medium">Click to upload photos</p>
-                            <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">JPEG, PNG, JPG, GIF, WebP &middot; 5MB max each</p>
+                            <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">JPEG, PNG, JPG, GIF, WebP &middot; 20MB max each</p>
                         </div>
 
                         <input id="photo-upload" type="file" multiple accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" wire:model="photos" class="hidden">
@@ -271,11 +272,11 @@ new #[Title('Book a Service')] class extends Component {
                                     </div>
 
                                     @verbatim
-                                    <button x-show="images.length > 1" @click="prev()"
+                                    <button type="button" x-show="images.length > 1" @click="prev()"
                                             class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                                     </button>
-                                    <button x-show="images.length > 1" @click="next()"
+                                    <button type="button" x-show="images.length > 1" @click="next()"
                                             class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                                     </button>
@@ -288,7 +289,7 @@ new #[Title('Book a Service')] class extends Component {
                                 <div class="flex items-center justify-between">
                                     <div class="flex gap-1.5" x-show="images.length > 1">
                                         <template x-for="(_, i) in images" :key="'dot-'+i">
-                                            <button @click="activeSlide = i"
+                                            <button type="button" @click="activeSlide = i"
                                                     :class="activeSlide === i ? 'bg-zinc-800 dark:bg-zinc-200 w-5' : 'bg-zinc-300 dark:bg-zinc-600 w-2'"
                                                     class="h-2 rounded-full transition-all duration-300"></button>
                                         </template>

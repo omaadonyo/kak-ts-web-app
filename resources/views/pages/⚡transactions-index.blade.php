@@ -27,12 +27,15 @@ new #[Title('Transactions')] class extends Component {
     public function transactions()
     {
         $items = collect();
+        $user = Auth::user();
+        $ids = [$user->id];
+        if ($user->isCompany()) $ids = array_merge($ids, $user->companyUsers()->pluck('id')->toArray());
 
         $invQuery = Invoice::with('bookService.user')
-            ->when(!Auth::user()->isAdmin(), fn($q) => $q->whereHas('bookService', fn($q) => $q->where('user_id', Auth::id())));
+            ->when(!$user->isAdmin(), fn($q) => $q->whereHas('bookService', fn($q) => $q->whereIn('user_id', $ids)));
 
         $quoQuery = Quotation::with('bookService.user')
-            ->when(!Auth::user()->isAdmin(), fn($q) => $q->whereHas('bookService', fn($q) => $q->where('user_id', Auth::id())));
+            ->when(!$user->isAdmin(), fn($q) => $q->whereHas('bookService', fn($q) => $q->whereIn('user_id', $ids)));
 
         if ($this->typeFilter === 'invoice') $quoQuery->whereRaw('1=0');
         if ($this->typeFilter === 'quotation') $invQuery->whereRaw('1=0');

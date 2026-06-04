@@ -296,7 +296,7 @@ new #[Title('Service Requests')] class extends Component {
                                     <div x-show="open" @click.away="open = false" class="mt-2 flex gap-2">
                                         <select x-model="techId" class="text-xs border border-zinc-200 dark:border-zinc-600 rounded-lg px-2 py-1 bg-white dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">
                                             <option value="">Select...</option>
-                                            @foreach (\App\Models\User::where('role', 'technician')->get() as $tech)
+                                            @foreach (\App\Models\User::where('role', 'tech')->get() as $tech)
                                                 <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                                             @endforeach
                                         </select>
