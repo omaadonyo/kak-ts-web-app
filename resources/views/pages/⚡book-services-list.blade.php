@@ -291,16 +291,22 @@ new #[Title('Service Requests')] class extends Component {
 
                         @can('assign-booking')
                             @if (!$service->assigned_to)
-                                <div x-data="{ open: false, techId: '' }" class="ml-auto">
-                                    <button @click="open = !open" class="text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors">Assign</button>
-                                    <div x-show="open" @click.away="open = false" class="mt-2 flex gap-2">
-                                        <select x-model="techId" class="text-xs border border-zinc-200 dark:border-zinc-600 rounded-lg px-2 py-1 bg-white dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">
-                                            <option value="">Select...</option>
-                                            @foreach (\App\Models\User::where('role', 'tech')->get() as $tech)
-                                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <button @click="$wire.assign({{ $service->id }}, techId); open = false" class="text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 transition-colors">Go</button>
+                                @php $techs = \App\Models\User::where('role', 'tech')->get(); @endphp
+                                <div x-data="{ open: false, search: '', techs: @js($techs->map(fn($t) => ['id' => $t->id, 'name' => $t->name])->values()->toArray()), get filtered() { return this.techs.filter(t => t.name.toLowerCase().includes(this.search.toLowerCase())) } }" class="ml-auto relative">
+                                    <button type="button" @click="open = !open" class="text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors">Assign</button>
+                                    <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 z-50 mt-1 w-52 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-600 rounded-xl shadow-lg overflow-hidden">
+                                        <div class="p-2 border-b border-zinc-100 dark:border-zinc-700">
+                                            <input type="text" x-model="search" placeholder="Search..." class="w-full border border-zinc-200 dark:border-zinc-600 rounded-lg px-3 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-900/20">
+                                        </div>
+                                        <div class="max-h-40 overflow-y-auto">
+                                            <template x-for="tech in filtered" :key="tech.id">
+                                                <button type="button" @click="$wire.assign({{ $service->id }}, tech.id); open = false; search = ''"
+                                                        class="w-full text-left px-4 py-2 text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors"
+                                                        x-text="tech.name">
+                                                </button>
+                                            </template>
+                                            <div x-show="filtered.length === 0" class="px-4 py-4 text-center text-xs text-zinc-400 dark:text-zinc-500">No technicians found</div>
+                                        </div>
                                     </div>
                                 </div>
                             @endif

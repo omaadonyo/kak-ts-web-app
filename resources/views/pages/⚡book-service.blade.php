@@ -116,12 +116,30 @@ new #[Title('Book a Service')] class extends Component {
             @if ($showClientSelector)
                 <div class="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700/50 shadow-sm p-6 md:p-8 mb-6">
                     <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Client <span class="text-zinc-400">*</span></label>
-                    <select wire:model="client_id" class="mt-1 w-full border border-zinc-200 dark:border-zinc-600 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-900/20">
-                        <option value="">Select a client...</option>
-                        @foreach (Auth::user()->isAdmin() ? \App\Models\User::where('role', 'client')->orderBy('name')->get() : Auth::user()->companyUsers()->orderBy('name')->get() as $client)
-                            <option value="{{ $client->id }}">{{ $client->name }} ({{ $client->email }})</option>
-                        @endforeach
-                    </select>
+                    @php $clients = Auth::user()->isAdmin() ? \App\Models\User::where('role', 'client')->orderBy('name')->get() : Auth::user()->companyUsers()->orderBy('name')->get(); @endphp
+                    <div x-data="{ open: false, search: '', selectedId: @entangle('client_id'), get selected() { return $store.clients.find(c => c.id === this.selectedId) }, get filtered() { return $store.clients.filter(c => c.name.toLowerCase().includes(this.search.toLowerCase()) || c.email.toLowerCase().includes(this.search.toLowerCase())) } }" x-init="$store.clients = @js($clients->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'email' => $c->email])->values()->toArray())" class="relative mt-1">
+                        <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-2 border border-zinc-200 dark:border-zinc-600 rounded-xl px-4 py-2.5 text-sm text-left transition-all duration-200 hover:border-zinc-400 dark:hover:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-zinc-400/20"
+                                :class="selectedId ? 'text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30' : 'text-zinc-400 dark:text-zinc-500 bg-transparent dark:bg-zinc-700/30'">
+                            <span x-text="selected ? selected.name + ' (' + selected.email + ')' : 'Select a client...'" class="truncate"></span>
+                            <svg class="w-4 h-4 shrink-0 text-zinc-400 transition-transform duration-200" :class="open && 'rotate-180'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <div x-show="open" @click.away="open = false" x-cloak class="absolute z-50 mt-1 w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-600 rounded-xl shadow-lg overflow-hidden">
+                            <div class="p-2 border-b border-zinc-100 dark:border-zinc-700">
+                                <input type="text" x-model="search" placeholder="Search clients..." class="w-full border border-zinc-200 dark:border-zinc-600 rounded-lg px-3 py-1.5 text-sm text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-900/20">
+                            </div>
+                            <div class="max-h-48 overflow-y-auto">
+                                <template x-for="client in filtered" :key="client.id">
+                                    <button type="button" @click="selectedId = client.id; open = false; search = ''"
+                                            class="w-full text-left px-4 py-2.5 text-sm transition-colors"
+                                            :class="selectedId === client.id ? 'bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-medium' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700/50'">
+                                        <span x-text="client.name" class="font-medium"></span>
+                                        <span x-text="' (' + client.email + ')'" class="text-zinc-400 dark:text-zinc-500"></span>
+                                    </button>
+                                </template>
+                                <div x-show="filtered.length === 0" class="px-4 py-6 text-center text-sm text-zinc-400 dark:text-zinc-500">No clients found</div>
+                            </div>
+                        </div>
+                    </div>
                     @error('client_id') <p class="mt-1.5 text-sm text-red-500 dark:text-red-400">{{ $message }}</p> @enderror
                 </div>
             @endif
