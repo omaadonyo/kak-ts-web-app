@@ -7,6 +7,8 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -21,11 +23,6 @@ class User extends Authenticatable implements PasskeyUser
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -34,9 +31,6 @@ class User extends Authenticatable implements PasskeyUser
         ];
     }
 
-    /**
-     * Get the user's initials
-     */
     public function initials(): string
     {
         return Str::of($this->name)
@@ -44,5 +38,40 @@ class User extends Authenticatable implements PasskeyUser
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isTechnician(): bool
+    {
+        return $this->role === 'technician';
+    }
+
+    public function isClient(): bool
+    {
+        return $this->role === 'client';
+    }
+
+    public function isCompany(): bool
+    {
+        return $this->client_type === 'company';
+    }
+
+    public function parentCompany(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'parent_company_id');
+    }
+
+    public function companyUsers(): HasMany
+    {
+        return $this->hasMany(User::class, 'parent_company_id');
+    }
+
+    public function assignedServices(): HasMany
+    {
+        return $this->hasMany(BookService::class, 'assigned_to');
     }
 }

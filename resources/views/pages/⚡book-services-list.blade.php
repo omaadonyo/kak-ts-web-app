@@ -7,22 +7,38 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('My Service Requests')] class extends Component {
+new #[Title('Service Requests')] class extends Component {
 
     #[Computed]
     public function services()
     {
-        return BookService::with(['user', 'assessment', 'quotation', 'project', 'invoice'])
-            ->where('user_id', Auth::id())
-            ->latest()
-            ->get();
+        $user = Auth::user();
+        $query = BookService::with(['user', 'assignedTo', 'assessment', 'quotation', 'project', 'invoice']);
+
+        if ($user->isClient()) {
+            $ids = [$user->id];
+            if ($user->isCompany()) $ids = array_merge($ids, $user->companyUsers()->pluck('id')->toArray());
+            $query->whereIn('user_id', $ids);
+        } elseif ($user->isTechnician()) {
+            $query->where('assigned_to', $user->id);
+        }
+
+        return $query->latest()->get();
     }
 
     public function delete(int $id): void
     {
-        $service = BookService::where('user_id', Auth::id())->findOrFail($id);
+        $service = BookService::findOrFail($id);
+        if (Auth::user()->isClient() && $service->user_id !== Auth::id()) abort(403);
         $service->delete();
         Flux::toast(variant: 'success', text: 'Service request deleted.');
+    }
+
+    public function assign(int $id, int $technicianId): void
+    {
+        $this->authorize('assign-booking');
+        BookService::where('id', $id)->update(['assigned_to' => $technicianId]);
+        Flux::toast(variant: 'success', text: 'Technician assigned.');
     }
 }; ?>
 
@@ -32,16 +48,18 @@ new #[Title('My Service Requests')] class extends Component {
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-zinc-900 dark:bg-white shadow-lg shadow-zinc-900/10 dark:shadow-black/20 mb-5">
                 <svg class="w-8 h-8 text-white dark:text-zinc-900" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
             </div>
-            <h1 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">My Service Requests</h1>
-            <p class="text-zinc-500 dark:text-zinc-400 mt-2 max-w-sm mx-auto">View and manage all your service requests.</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">{{ auth()->user()->isClient() ? 'My Service Requests' : (auth()->user()->isTechnician() ? 'Assigned Services' : 'All Services') }}</h1>
+            <p class="text-zinc-500 dark:text-zinc-400 mt-2 max-w-sm mx-auto">View and manage service requests.</p>
         </div>
 
         <div class="w-full md:w-1/2 md:mx-auto space-y-6">
-            <div class="flex justify-end">
-                <flux:button href="{{ route('book-service') }}" icon="plus" variant="primary" wire:navigate>
-                    New Request
-                </flux:button>
-            </div>
+            @can('book-service')
+                <div class="flex justify-end">
+                    <flux:button href="{{ route('book-service') }}" icon="plus" variant="primary" wire:navigate>
+                        New Request
+                    </flux:button>
+                </div>
+            @endcan
 
             @forelse ($this->services as $service)
                 @php
@@ -78,6 +96,17 @@ new #[Title('My Service Requests')] class extends Component {
                                     </span>
                                     <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $service->created_at->format('M d, Y') }}</span>
                                 </div>
+
+                                @if (!auth()->user()->isClient())
+                                    <div class="flex items-center gap-3 mt-2 ml-13 text-xs text-zinc-400 dark:text-zinc-500">
+                                        <span>Client: <strong class="text-zinc-600 dark:text-zinc-300">{{ $service->user->name }}</strong></span>
+                                        @if ($service->assignedTo)
+                                            <span>Tech: <strong class="text-zinc-600 dark:text-zinc-300">{{ $service->assignedTo->name }}</strong></span>
+                                        @elseif (auth()->user()->isAdmin())
+                                            <span class="text-amber-500">Unassigned</span>
+                                        @endif
+                                    </div>
+                                @endif
 
                                 @if ($service->notes)
                                     <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-3 ml-13 line-clamp-2">{{ $service->notes }}</p>
@@ -148,31 +177,53 @@ new #[Title('My Service Requests')] class extends Component {
                     @endif
 
                     <div class="px-6 py-3 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-700 flex items-center gap-2 flex-wrap">
-                        @if (!$service->assessment)
-                            <flux:button href="{{ route('assessments.create', $service->id) }}" size="sm" variant="ghost" wire:navigate>Add Assessment</flux:button>
-                        @else
-                            <flux:button href="{{ route('assessments.show', $service->id) }}" size="sm" variant="ghost" wire:navigate>Assessment</flux:button>
-
-                            @if (!$service->quotation)
-                                <flux:button href="{{ route('quotations.create', $service->id) }}" size="sm" variant="ghost" wire:navigate>Generate Quotation</flux:button>
+                        @canany(['assess-booking', 'generate-quotation'])
+                            @if (!$service->assessment)
+                                <flux:button href="{{ route('assessments.create', $service->id) }}" size="sm" variant="ghost" wire:navigate>Add Assessment</flux:button>
                             @else
-                                <flux:button href="{{ route('quotations.show', $service->id) }}" size="sm" variant="ghost" wire:navigate>Quotation</flux:button>
+                                <flux:button href="{{ route('assessments.show', $service->id) }}" size="sm" variant="ghost" wire:navigate>Assessment</flux:button>
 
-                                @if ($service->project)
-                                    <flux:button href="{{ route('projects.show', $service->id) }}" size="sm" variant="ghost" wire:navigate>Project</flux:button>
-
-                                    @if (!$service->invoice)
-                                        <flux:button href="{{ route('invoices.create', $service->id) }}" size="sm" variant="ghost" wire:navigate>Generate Invoice</flux:button>
-                                    @else
-                                        <flux:button href="{{ route('invoices.show', $service->id) }}" size="sm" variant="ghost" wire:navigate>Invoice</flux:button>
-                                    @endif
+                                @if (!$service->quotation)
+                                    <flux:button href="{{ route('quotations.create', $service->id) }}" size="sm" variant="ghost" wire:navigate>Generate Quotation</flux:button>
+                                @else
+                                    <flux:button href="{{ route('quotations.show', $service->id) }}" size="sm" variant="ghost" wire:navigate>Quotation</flux:button>
                                 @endif
                             @endif
+                        @else
+                            <flux:button href="{{ route('assessments.show', $service->id) }}" size="sm" variant="ghost" wire:navigate>View Assessment</flux:button>
+                            <flux:button href="{{ route('quotations.show', $service->id) }}" size="sm" variant="ghost" wire:navigate>View Quotation</flux:button>
+                        @endcanany
+
+                        @if ($service->project)
+                            <flux:button href="{{ route('projects.show', $service->id) }}" size="sm" variant="ghost" wire:navigate>Project</flux:button>
                         @endif
 
-                        @if (!$service->assessment && !$service->quotation && !$service->project)
-                            <flux:button wire:click="delete({{ $service->id }})" size="sm" variant="danger" wire:confirm="Delete this request?" class="ml-auto">Delete</flux:button>
+                        @if ($service->invoice)
+                            <flux:button href="{{ route('invoices.show', $service->id) }}" size="sm" variant="ghost" wire:navigate>Invoice</flux:button>
                         @endif
+
+                        @can('assign-booking')
+                            @if (!$service->assigned_to)
+                                <div x-data="{ open: false, techId: '' }" class="ml-auto">
+                                    <button @click="open = !open" class="text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors">Assign</button>
+                                    <div x-show="open" @click.away="open = false" class="mt-2 flex gap-2">
+                                        <select x-model="techId" class="text-xs border border-zinc-200 dark:border-zinc-600 rounded-lg px-2 py-1 bg-white dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">
+                                            <option value="">Select...</option>
+                                            @foreach (\App\Models\User::where('role', 'technician')->get() as $tech)
+                                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button @click="$wire.assign({{ $service->id }}, techId); open = false" class="text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 transition-colors">Go</button>
+                                    </div>
+                                </div>
+                            @endif
+                        @endcan
+
+                        @can('book-service')
+                            @if (!$service->assessment && !$service->quotation && !$service->project)
+                                <flux:button wire:click="delete({{ $service->id }})" size="sm" variant="danger" wire:confirm="Delete this request?" class="ml-auto">Delete</flux:button>
+                            @endif
+                        @endcan
                     </div>
                 </div>
             @empty

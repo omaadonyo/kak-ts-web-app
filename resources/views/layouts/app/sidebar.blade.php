@@ -16,12 +16,14 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="plus" :href="route('book-service')" :current="request()->routeIs('book-service')" wire:navigate>
-                        {{ __('Book a Service') }}
-                    </flux:sidebar.item>
+                    @can('book-service')
+                        <flux:sidebar.item icon="plus" :href="route('book-service')" :current="request()->routeIs('book-service')" wire:navigate>
+                            {{ __('Book a Service') }}
+                        </flux:sidebar.item>
+                    @endcan
 
                     <flux:sidebar.item icon="list-bullet" :href="route('book-services')" :current="request()->routeIs('book-services*')" wire:navigate>
-                        {{ __('My Services') }}
+                        {{ auth()->user()->isClient() ? __('My Services') : (auth()->user()->isTechnician() ? __('Assigned Services') : __('All Services')) }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 
@@ -35,6 +37,20 @@
                     <flux:sidebar.item icon="credit-card" :href="route('invoices.index')" :current="request()->routeIs('invoices.*')" wire:navigate>
                         {{ __('Invoices') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="currency-dollar" :href="route('transactions.index')" :current="request()->routeIs('transactions.*')" wire:navigate>
+                        {{ __('Transactions') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Management')">
+                    @can('manage-users')
+                        <flux:sidebar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>
+                            {{ __('Users') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="chart-bar" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate>
+                            {{ __('Reports') }}
+                        </flux:sidebar.item>
+                    @endcan
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

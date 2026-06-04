@@ -12,46 +12,59 @@ use Livewire\Component;
 
 new #[Title('Dashboard')] class extends Component {
 
-    #[Computed]
-    public function totalServices() { return BookService::where('user_id', Auth::id())->count(); }
+    private function baseQuery()
+    {
+        $user = Auth::user();
+        if ($user->isAdmin()) return BookService::query();
+        if ($user->isTechnician()) return BookService::where('assigned_to', $user->id);
+        $ids = [$user->id];
+        if ($user->isCompany()) $ids = array_merge($ids, $user->companyUsers()->pluck('id')->toArray());
+        return BookService::whereIn('user_id', $ids);
+    }
 
     #[Computed]
-    public function pendingServices() { return BookService::where('user_id', Auth::id())->where('status', 'pending')->count(); }
+    public function totalServices() { return $this->baseQuery()->count(); }
 
     #[Computed]
-    public function activeServices() { return BookService::where('user_id', Auth::id())->whereIn('status', ['in_progress', 'pending'])->count(); }
+    public function pendingServices() { return $this->baseQuery()->where('status', 'pending')->count(); }
 
     #[Computed]
-    public function completedServices() { return BookService::where('user_id', Auth::id())->where('status', 'completed')->count(); }
+    public function activeServices() { return $this->baseQuery()->whereIn('status', ['in_progress', 'pending'])->count(); }
 
     #[Computed]
-    public function totalAssessments() { return Assessment::whereHas('bookService', fn($q) => $q->where('user_id', Auth::id()))->count(); }
+    public function completedServices() { return $this->baseQuery()->where('status', 'completed')->count(); }
 
     #[Computed]
-    public function totalQuotations() { return Quotation::whereHas('bookService', fn($q) => $q->where('user_id', Auth::id()))->count(); }
+    public function unassignedServices() { return auth()->user()->isAdmin() ? BookService::whereNull('assigned_to')->count() : 0; }
 
     #[Computed]
-    public function acceptedQuotations() { return Quotation::whereHas('bookService', fn($q) => $q->where('user_id', Auth::id()))->where('status', 'accepted')->count(); }
+    public function totalAssessments() { return Assessment::whereIn('book_service_id', $this->baseQuery()->pluck('id'))->count(); }
 
     #[Computed]
-    public function totalProjects() { return Project::whereHas('bookService', fn($q) => $q->where('user_id', Auth::id()))->count(); }
+    public function totalQuotations() { return Quotation::whereIn('book_service_id', $this->baseQuery()->pluck('id'))->count(); }
 
     #[Computed]
-    public function inProgressProjects() { return Project::whereHas('bookService', fn($q) => $q->where('user_id', Auth::id()))->where('status', 'in_progress')->count(); }
+    public function acceptedQuotations() { return Quotation::whereIn('book_service_id', $this->baseQuery()->pluck('id'))->where('status', 'accepted')->count(); }
 
     #[Computed]
-    public function completedProjects() { return Project::whereHas('bookService', fn($q) => $q->where('user_id', Auth::id()))->where('status', 'completed')->count(); }
+    public function totalProjects() { return Project::whereIn('book_service_id', $this->baseQuery()->pluck('id'))->count(); }
 
     #[Computed]
-    public function totalInvoices() { return Invoice::whereHas('bookService', fn($q) => $q->where('user_id', Auth::id()))->count(); }
+    public function inProgressProjects() { return Project::whereIn('book_service_id', $this->baseQuery()->pluck('id'))->where('status', 'in_progress')->count(); }
 
     #[Computed]
-    public function paidInvoices() { return Invoice::whereHas('bookService', fn($q) => $q->where('user_id', Auth::id()))->where('status', 'paid')->count(); }
+    public function completedProjects() { return Project::whereIn('book_service_id', $this->baseQuery()->pluck('id'))->where('status', 'completed')->count(); }
+
+    #[Computed]
+    public function totalInvoices() { return Invoice::whereIn('book_service_id', $this->baseQuery()->pluck('id'))->count(); }
+
+    #[Computed]
+    public function paidInvoices() { return Invoice::whereIn('book_service_id', $this->baseQuery()->pluck('id'))->where('status', 'paid')->count(); }
 
     #[Computed]
     public function totalRevenue()
     {
-        return Invoice::whereHas('bookService', fn($q) => $q->where('user_id', Auth::id()))
+        return Invoice::whereIn('book_service_id', $this->baseQuery()->pluck('id'))
             ->where('status', 'paid')
             ->sum('total');
     }
@@ -59,7 +72,7 @@ new #[Title('Dashboard')] class extends Component {
     #[Computed]
     public function outstandingRevenue()
     {
-        return Invoice::whereHas('bookService', fn($q) => $q->where('user_id', Auth::id()))
+        return Invoice::whereIn('book_service_id', $this->baseQuery()->pluck('id'))
             ->whereIn('status', ['draft', 'sent'])
             ->sum('total');
     }
@@ -67,7 +80,7 @@ new #[Title('Dashboard')] class extends Component {
     #[Computed]
     public function serviceTypeBreakdown()
     {
-        return BookService::where('user_id', Auth::id())
+        return $this->baseQuery()
             ->selectRaw('service_type, count(*) as count')
             ->groupBy('service_type')
             ->pluck('count', 'service_type')
@@ -77,7 +90,7 @@ new #[Title('Dashboard')] class extends Component {
     #[Computed]
     public function servicesByStatus()
     {
-        return BookService::where('user_id', Auth::id())
+        return $this->baseQuery()
             ->selectRaw('status, count(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status')
@@ -87,8 +100,7 @@ new #[Title('Dashboard')] class extends Component {
     #[Computed]
     public function recentServices()
     {
-        return BookService::with(['assessment', 'quotation', 'project'])
-            ->where('user_id', Auth::id())
+        return $this->baseQuery()->with(['assessment', 'quotation', 'project', 'user'])
             ->latest()
             ->take(5)
             ->get();
@@ -97,7 +109,7 @@ new #[Title('Dashboard')] class extends Component {
     #[Computed]
     public function monthlyRevenue()
     {
-        return Invoice::whereHas('bookService', fn($q) => $q->where('user_id', Auth::id()))
+        return Invoice::whereIn('book_service_id', $this->baseQuery()->pluck('id'))
             ->where('status', 'paid')
             ->selectRaw("strftime('%Y-%m', created_at) as month, sum(total) as total")
             ->groupBy('month')
