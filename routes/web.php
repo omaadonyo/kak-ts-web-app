@@ -26,6 +26,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('book-services/{bookService}/project', 'pages::project-view')
         ->name('projects.show');
 
+    Route::livewire('book-services/{bookService}/report', 'pages::project-report')
+        ->name('projects.report');
+
     Route::livewire('book-services/{bookService}/invoice', 'pages::invoice-form')
         ->name('invoices.show');
 
@@ -37,6 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('invoices', 'pages::invoices-index')->name('invoices.index');
 
     Route::livewire('users', 'pages::users-index')->name('users.index');
+    Route::livewire('company/users', 'pages::company-users-index')->name('company.users.index');
     Route::livewire('reports', 'pages::reports')->name('reports');
     Route::livewire('transactions', 'pages::transactions-index')->name('transactions.index');
 });

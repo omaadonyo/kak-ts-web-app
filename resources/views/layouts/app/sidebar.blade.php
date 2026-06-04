@@ -51,6 +51,11 @@
                             {{ __('Reports') }}
                         </flux:sidebar.item>
                     @endcan
+                    @can('manage-company-users')
+                        <flux:sidebar.item icon="user-group" :href="route('company.users.index')" :current="request()->routeIs('company.users.*')" wire:navigate>
+                            {{ __('My Team') }}
+                        </flux:sidebar.item>
+                    @endcan
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
@@ -135,3 +140,15 @@
         @fluxScripts
     </body>
 </html>
+
+<style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #a1a1aa; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #71717a; }
+    .dark ::-webkit-scrollbar-thumb { background: #52525b; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #71717a; }
+    * { scrollbar-width: thin; scrollbar-color: #a1a1aa transparent; }
+    .dark * { scrollbar-color: #52525b transparent; }
+</style>

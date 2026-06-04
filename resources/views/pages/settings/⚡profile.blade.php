@@ -14,24 +14,29 @@ new #[Title('Profile settings')] class extends Component {
 
     public string $name = '';
     public string $email = '';
+    public string $phone = '';
+    public string $client_type = '';
+    public ?int $parent_company_id = null;
 
-    /**
-     * Mount the component.
-     */
     public function mount(): void
     {
-        $this->name = Auth::user()->name;
-        $this->email = Auth::user()->email;
+        $user = Auth::user();
+        $this->name = $user->name;
+        $this->email = $user->email;
+        $this->phone = $user->phone ?? '';
+        $this->client_type = $user->client_type ?? '';
+        $this->parent_company_id = $user->parent_company_id;
     }
 
-    /**
-     * Update the profile information for the currently authenticated user.
-     */
     public function updateProfileInformation(): void
     {
         $user = Auth::user();
 
-        $validated = $this->validate($this->profileRules($user->id));
+        $validated = $this->validate(array_merge($this->profileRules($user->id), [
+            'phone' => ['nullable', 'string', 'max:20'],
+            'client_type' => ['nullable', 'in:individual,company'],
+            'parent_company_id' => ['nullable', 'exists:users,id'],
+        ]));
 
         $user->fill($validated);
 
@@ -69,6 +74,15 @@ new #[Title('Profile settings')] class extends Component {
     }
 
     #[Computed]
+    public function clientCompanies(): \Illuminate\Support\Collection
+    {
+        return \App\Models\User::where('role', 'client')
+            ->where('client_type', 'company')
+            ->where('id', '!=', Auth::id())
+            ->get();
+    }
+
+    #[Computed]
     public function showDeleteUser(): bool
     {
         return ! Auth::user() instanceof MustVerifyEmail
@@ -84,6 +98,24 @@ new #[Title('Profile settings')] class extends Component {
     <x-pages::settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
             <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
+
+            <flux:input wire:model="phone" :label="__('Phone')" type="text" autocomplete="tel" />
+
+            @if (Auth::user()->role === 'client')
+                <flux:select wire:model="client_type" :label="__('Client Type')" placeholder="{{ __('Select type') }}">
+                    <flux:select.option value="individual">{{ __('Individual') }}</flux:select.option>
+                    <flux:select.option value="company">{{ __('Company') }}</flux:select.option>
+                </flux:select>
+
+                @if ($client_type === 'company')
+                    <flux:select wire:model="parent_company_id" :label="__('Parent Company')" placeholder="{{ __('Select parent company') }}">
+                        <flux:select.option value="">{{ __('None (this is a parent company)') }}</flux:select.option>
+                        @foreach ($this->clientCompanies as $company)
+                            <flux:select.option :value="$company->id">{{ $company->name }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @endif
+            @endif
 
             <div>
                 <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />

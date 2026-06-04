@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\BookService;
+use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
@@ -16,16 +17,21 @@ new #[Title('Book a Service')] class extends Component {
     public array $photos = [];
     public array $photoPreviews = [];
     public int $step = 1;
+    public ?int $client_id = null;
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'service_type' => ['required', 'in:plumbing,electricals,carpentry'],
             'location' => ['required', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'photos' => ['required', 'array', 'min:2', 'max:5'],
             'photos.*' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
         ];
+        if (Auth::user()->isAdmin()) {
+            $rules['client_id'] = ['required', 'exists:users,id'];
+        }
+        return $rules;
     }
 
     public function updatedPhotos(): void
@@ -64,7 +70,7 @@ new #[Title('Book a Service')] class extends Component {
         }
 
         BookService::create([
-            'user_id' => Auth::id(),
+            'user_id' => Auth::user()->isAdmin() ? $this->client_id : Auth::id(),
             'service_type' => $this->service_type,
             'location' => $this->location,
             'notes' => $this->notes,
@@ -73,7 +79,7 @@ new #[Title('Book a Service')] class extends Component {
         ]);
 
         Flux::toast(variant: 'success', text: 'Service request submitted successfully.');
-        $this->reset(['service_type', 'location', 'notes', 'photos', 'photoPreviews', 'step']);
+        $this->reset(['service_type', 'location', 'notes', 'photos', 'photoPreviews', 'step', 'client_id']);
         $this->step = 1;
     }
 }; ?>
@@ -106,6 +112,19 @@ new #[Title('Book a Service')] class extends Component {
         </div>
 
         <div class="w-full md:w-1/2 md:mx-auto">
+            @can('manage-users')
+                <div class="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700/50 shadow-sm p-6 md:p-8 mb-6">
+                    <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Client <span class="text-zinc-400">*</span></label>
+                    <select wire:model="client_id" class="mt-1 w-full border border-zinc-200 dark:border-zinc-600 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-900/20">
+                        <option value="">Select a client...</option>
+                        @foreach (\App\Models\User::where('role', 'client')->orderBy('name')->get() as $client)
+                            <option value="{{ $client->id }}">{{ $client->name }} ({{ $client->email }})</option>
+                        @endforeach
+                    </select>
+                    @error('client_id') <p class="mt-1.5 text-sm text-red-500 dark:text-red-400">{{ $message }}</p> @enderror
+                </div>
+            @endcan
+
             <form wire:submit="save" class="space-y-6">
 
                 @if ($step === 1)

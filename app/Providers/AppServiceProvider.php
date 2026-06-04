@@ -57,5 +57,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('view-assigned', fn ($user, BookService $b) => $user->isAdmin() || ($user->isTechnician() && $b->assigned_to === $user->id));
         Gate::define('record-payment', fn ($user, Invoice $i) => $user->isClient() && $i->bookService->user_id === $user->id);
         Gate::define('manage-users', fn ($user) => $user->isAdmin());
+        Gate::define('manage-company-users', fn ($user) => $user->isClient() && $user->isCompany());
     }
 }
