@@ -40,8 +40,6 @@ new #[Title('Assessment Report')] class extends Component {
 
     public function updatedPhotos(): void
     {
-        $this->validateOnly('photos');
-        $this->validateOnly('photos.*');
         $this->photoPreviews = [];
         foreach ($this->photos as $photo) {
             $this->photoPreviews[] = $photo->temporaryUrl();

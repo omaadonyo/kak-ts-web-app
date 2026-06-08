@@ -47,7 +47,7 @@ class AppServiceProvider extends ServiceProvider
 
     protected function configureGates(): void
     {
-        Gate::define('book-service', fn ($user) => $user->isClient());
+        Gate::define('book-service', fn ($user) => $user->isClient() || $user->isAdmin());
         Gate::define('assign-booking', fn ($user) => $user->isAdmin());
         Gate::define('assess-booking', fn ($user) => $user->isTechnician() || $user->isAdmin());
         Gate::define('generate-quotation', fn ($user) => $user->isTechnician() || $user->isAdmin());

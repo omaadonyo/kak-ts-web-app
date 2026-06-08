@@ -36,8 +36,6 @@ new #[Title('Book a Service')] class extends Component {
 
     public function updatedPhotos(): void
     {
-        $this->validateOnly('photos');
-        $this->validateOnly('photos.*');
         $this->photoPreviews = [];
         foreach ($this->photos as $photo) {
             $this->photoPreviews[] = $photo->temporaryUrl();
@@ -94,21 +92,26 @@ new #[Title('Book a Service')] class extends Component {
             <p class="text-zinc-500 dark:text-zinc-400 mt-2 max-w-sm mx-auto">Tell us what needs fixing and we'll take care of the rest.</p>
         </div>
 
-        <div class="flex items-center justify-center gap-2 sm:gap-4 mb-10 text-xs font-medium">
-            <button type="button" @click="$wire.goStep(1)" class="flex items-center gap-2 {{ $step === 1 ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400' }} transition-colors">
-                <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {{ $step === 1 ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 dark:text-zinc-500' }}">1</span>
-                <span class="hidden sm:inline">Service</span>
-            </button>
-            <span class="w-10 h-px bg-zinc-200 dark:bg-zinc-700"></span>
-            <button type="button" @click="$wire.goStep(2)" class="flex items-center gap-2 {{ $step === 2 ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400' }} transition-colors">
-                <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {{ $step === 2 ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 dark:text-zinc-500' }}">2</span>
-                <span class="hidden sm:inline">Details</span>
-            </button>
-            <span class="w-10 h-px bg-zinc-200 dark:bg-zinc-700"></span>
-            <button type="button" @click="$wire.goStep(3)" class="flex items-center gap-2 {{ $step === 3 ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400' }} transition-colors">
-                <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {{ $step === 3 ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 dark:text-zinc-500' }}">3</span>
-                <span class="hidden sm:inline">Photos</span>
-            </button>
+        <div x-data="{ step: $wire.$entangle('step') }" class="mb-10">
+            <div class="flex items-center justify-center gap-2 sm:gap-4 mb-4 text-xs font-medium">
+                <button type="button" @click="$wire.goStep(1)" class="flex items-center gap-2 {{ $step === 1 ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400' }} transition-colors">
+                    <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {{ $step === 1 ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 dark:text-zinc-500' }}">1</span>
+                    <span class="hidden sm:inline">Service</span>
+                </button>
+                <span class="w-10 h-px bg-zinc-200 dark:bg-zinc-700"></span>
+                <button type="button" @click="$wire.goStep(2)" class="flex items-center gap-2 {{ $step === 2 ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400' }} transition-colors">
+                    <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {{ $step === 2 ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 dark:text-zinc-500' }}">2</span>
+                    <span class="hidden sm:inline">Details</span>
+                </button>
+                <span class="w-10 h-px bg-zinc-200 dark:bg-zinc-700"></span>
+                <button type="button" @click="$wire.goStep(3)" class="flex items-center gap-2 {{ $step === 3 ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400' }} transition-colors">
+                    <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {{ $step === 3 ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 dark:text-zinc-500' }}">3</span>
+                    <span class="hidden sm:inline">Photos</span>
+                </button>
+            </div>
+            <div class="max-w-xs mx-auto h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div class="h-full bg-zinc-900 dark:bg-zinc-100 rounded-full transition-all duration-500 ease-out" :style="'width: ' + ((step - 1) / 2 * 100) + '%'"></div>
+            </div>
         </div>
 
         <div class="w-full md:w-1/2 md:mx-auto">

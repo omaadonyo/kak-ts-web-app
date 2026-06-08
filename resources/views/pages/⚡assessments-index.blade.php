@@ -165,7 +165,10 @@ new #[Title('Assessments')] class extends Component {
                                     {{ $assessment->status }}
                                 </span>
                                 <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $assessment->created_at->format('M d, Y') }}</span>
-                                <flux:button href="{{ route('assessments.show', $assessment->book_service_id) }}" size="sm" variant="ghost" wire:navigate>View Details</flux:button>
+                                <a href="{{ route('assessments.show', $assessment->book_service_id) }}" wire:navigate class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    Details
+                                </a>
                             </div>
                         </div>
                     </div>

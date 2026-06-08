@@ -55,3 +55,11 @@
 
 **Commands**:
 - `npm run build`
+
+### 2026-06-07 — Button bar redesign
+
+**Changes**:
+- `⚡book-services-list.blade.php` — Moved assign button next to status badge (inline dropdown with search, or tech name pill when assigned). Redesigned footer action buttons with unique color per action (indigo=assessment, blue=view assessment, amber=quote, cyan=project, slate=report, emerald=invoice, red=delete) and SVG icons. Removed duplicate assign dropdown from footer.
+
+**Commands**:
+- `npm run build`

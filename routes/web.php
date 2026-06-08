@@ -45,6 +45,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('company/users', 'pages::company-users-index')->name('company.users.index');
     Route::livewire('reports', 'pages::reports')->name('reports');
     Route::livewire('transactions', 'pages::transactions-index')->name('transactions.index');
+
+    Route::livewire('receipts', 'pages::receipts-index')->name('receipts.index');
+    Route::livewire('book-services/{bookService}/receipt/create', 'pages::receipt-form')
+        ->name('receipts.create');
 });
 
 require __DIR__.'/settings.php';

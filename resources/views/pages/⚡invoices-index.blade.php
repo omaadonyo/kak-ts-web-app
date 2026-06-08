@@ -15,6 +15,13 @@ new #[Title('Invoices')] class extends Component {
     public string $search = '';
     public int $perPage = 10;
 
+    public bool $showReceiptModal = false;
+    public ?int $receiptInvoiceId = null;
+    public float $receiptAmount = 0;
+    public string $receiptMethod = 'bank_transfer';
+    public string $receiptReference = '';
+    public string $receiptNotes = '';
+
     protected $queryString = ['search', 'perPage'];
 
     public function updatingSearch(): void
@@ -48,12 +55,49 @@ new #[Title('Invoices')] class extends Component {
         return $query->latest()->paginate($this->perPage);
     }
 
+    public function openReceiptModal(int $invoiceId): void
+    {
+        $invoice = Invoice::with('bookService')->findOrFail($invoiceId);
+        $this->receiptInvoiceId = $invoice->id;
+        $totalPaid = $invoice->payments()->where('status', '!=', 'failed')->sum('amount');
+        $this->receiptAmount = max(0, $invoice->total - $totalPaid);
+        $this->receiptMethod = 'bank_transfer';
+        $this->receiptReference = '';
+        $this->receiptNotes = '';
+        $this->showReceiptModal = true;
+    }
+
+    public function saveReceipt(): void
+    {
+        $this->validate([
+            'receiptAmount' => ['required', 'numeric', 'min:0.01'],
+            'receiptMethod' => ['required', 'in:cash,bank_transfer,mobile_money,cheque'],
+            'receiptReference' => ['nullable', 'string', 'max:255'],
+            'receiptNotes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $invoice = Invoice::findOrFail($this->receiptInvoiceId);
+        \App\Models\Payment::create([
+            'invoice_id' => $invoice->id,
+            'receipt_number' => \App\Models\Payment::generateReceiptNumber(),
+            'amount' => $this->receiptAmount,
+            'method' => $this->receiptMethod,
+            'reference' => $this->receiptReference,
+            'notes' => $this->receiptNotes,
+            'status' => 'completed',
+            'paid_at' => now(),
+        ]);
+
+        $this->showReceiptModal = false;
+        $this->receiptInvoiceId = null;
+        Flux::toast(variant: 'success', text: 'Receipt recorded successfully.');
+    }
+
     public function markPaid(int $id): void
     {
         $invoice = Invoice::with('bookService')->findOrFail($id);
         if ($invoice->bookService->user_id !== Auth::id()) return;
         $invoice->update(['status' => 'paid']);
-        $invoice->bookService->update(['status' => 'completed']);
         Flux::toast(variant: 'success', text: 'Invoice marked as paid.');
     }
 
@@ -201,14 +245,18 @@ new #[Title('Invoices')] class extends Component {
                                     {{ ucfirst($invoice->status) }}
                                 </span>
                                 <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $invoice->created_at->format('M d, Y') }}</span>
-                                <flux:button href="{{ route('invoices.show', $book->id) }}" size="sm" variant="ghost" wire:navigate>View Invoice</flux:button>
+                                <a href="{{ route('invoices.show', $book->id) }}" wire:navigate class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    Details
+                                </a>
                             </div>
                         </div>
                     </div>
 
                     @if ($invoice->status === 'sent')
-                        <div class="px-6 py-3 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-700 flex items-center">
-                            <flux:button wire:click="markPaid({{ $invoice->id }})" size="sm" variant="primary" class="ml-auto">Mark as Paid</flux:button>
+                        <div class="px-6 py-3 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-700 flex items-center gap-2 justify-end">
+                            <flux:button wire:click="openReceiptModal({{ $invoice->id }})" size="sm" variant="primary" class="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">Record Receipt</flux:button>
+                            <flux:button wire:click="markPaid({{ $invoice->id }})" size="sm" variant="ghost">Mark Paid</flux:button>
                         </div>
                     @endif
                 </div>
@@ -225,6 +273,51 @@ new #[Title('Invoices')] class extends Component {
             @if ($this->invoices->hasPages())
                 <div class="mt-6">{{ $this->invoices->links(data: ['scrollTo' => false]) }}</div>
             @endif
+        </div>
+    </div>
+
+    <div x-data="{ open: $wire.$entangle('showReceiptModal') }" x-show="open" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div x-show="open" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="open = false" class="fixed inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div x-show="open" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-4 scale-95" class="relative w-full max-w-lg bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-700 flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Record Receipt</h3>
+                <button type="button" @click="open = false" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-zinc-600 dark:text-zinc-400">Amount (UGX)</label>
+                        <input type="number" step="0.01" min="0.01" wire:model="receiptAmount" placeholder="0.00"
+                               class="w-full border border-zinc-200 dark:border-zinc-600 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-900/20">
+                        @error('receiptAmount') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-zinc-600 dark:text-zinc-400">Method</label>
+                        <select wire:model="receiptMethod" class="w-full border border-zinc-200 dark:border-zinc-600 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-900/20">
+                            <option value="cash">Cash</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="mobile_money">Mobile Money</option>
+                            <option value="cheque">Cheque</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-zinc-600 dark:text-zinc-400">Reference <span class="text-zinc-400">(optional)</span></label>
+                    <input type="text" wire:model="receiptReference" placeholder="Transaction ID..."
+                           class="w-full border border-zinc-200 dark:border-zinc-600 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-900/20">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-zinc-600 dark:text-zinc-400">Notes <span class="text-zinc-400">(optional)</span></label>
+                    <textarea wire:model="receiptNotes" rows="2" placeholder="Optional notes..."
+                              class="w-full border border-zinc-200 dark:border-zinc-600 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 resize-none"></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-zinc-100 dark:border-zinc-700 flex items-center justify-end gap-3 bg-zinc-50 dark:bg-zinc-800/50">
+                <button type="button" @click="open = false" class="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors">Cancel</button>
+                <flux:button wire:click="saveReceipt" variant="primary" class="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">Save Receipt</flux:button>
+            </div>
         </div>
     </div>
 </div>

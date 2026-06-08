@@ -208,17 +208,27 @@ new #[Title('Quotations')] class extends Component {
                                     <span class="text-xs text-zinc-400 dark:text-zinc-500">Valid until {{ $quotation->valid_until->format('M d, Y') }}</span>
                                 @endif
                                 <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $quotation->created_at->format('M d, Y') }}</span>
+                                <a href="{{ route('quotations.show', $book->id) }}" wire:navigate class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    Details
+                                </a>
                             </div>
                         </div>
                     </div>
 
                     <div class="px-6 py-3 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-700 flex items-center gap-2">
-                        <flux:button href="{{ route('quotations.show', $book->id) }}" size="sm" variant="ghost" wire:navigate>View Full Quote</flux:button>
+                        <a href="{{ route('quotations.show', $book->id) }}" wire:navigate class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            Full Quote
+                        </a>
                         @if ($quotation->status === 'sent')
                             <flux:button wire:click="accept({{ $quotation->id }})" size="sm" variant="primary" class="ml-auto">Accept & Start Project</flux:button>
                         @endif
                         @if ($quotation->bookService->invoice)
-                            <flux:button href="{{ route('invoices.show', $book->id) }}" size="sm" variant="ghost" wire:navigate class="ml-auto">View Invoice</flux:button>
+                            <a href="{{ route('invoices.show', $book->id) }}" wire:navigate class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors ml-auto">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                                Invoice
+                            </a>
                         @endif
                     </div>
                 </div>
