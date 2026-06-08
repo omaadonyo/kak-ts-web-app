@@ -111,7 +111,7 @@ new #[Title('Dashboard')] class extends Component {
     {
         return Invoice::whereIn('book_service_id', $this->baseQuery()->pluck('id'))
             ->where('status', 'paid')
-            ->selectRaw("strftime('%Y-%m', created_at) as month, sum(total) as total")
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, sum(total) as total")
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('total', 'month')
@@ -220,12 +220,22 @@ new #[Title('Dashboard')] class extends Component {
                             'plumbing' => 'bg-blue-500 dark:bg-blue-400',
                             'electricals' => 'bg-amber-500 dark:bg-amber-400',
                             'carpentry' => 'bg-emerald-500 dark:bg-emerald-400',
+                            'civil_works' => 'bg-violet-500 dark:bg-violet-400',
+                            'painting' => 'bg-pink-500 dark:bg-pink-400',
+                            'tiling' => 'bg-cyan-500 dark:bg-cyan-400',
+                            'roofing' => 'bg-orange-500 dark:bg-orange-400',
+                            'landscaping' => 'bg-green-500 dark:bg-green-400',
                         ];
-                        $labels = ['plumbing' => 'Plumbing', 'electricals' => 'Electricals', 'carpentry' => 'Carpentry'];
+                        $labels = ['plumbing' => 'Plumbing', 'electricals' => 'Electricals', 'carpentry' => 'Carpentry', 'civil_works' => 'Civil Works', 'painting' => 'Painting', 'tiling' => 'Tiling', 'roofing' => 'Roofing', 'landscaping' => 'Landscaping'];
                         $icons = [
                             'plumbing' => '<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a8 8 0 0 0 8-8c0-4.42-3.58-8-8-8-3.5 0-6.5 2.25-7.5 5.5C3.5 14 6 16.5 9.5 16.5c2 0 3.75-.83 5-2.17"/><path d="M9.5 16.5c-1.5 0-2.5-1-3-2"/><path d="M12 6v2"/><path d="M14 8h-4"/></svg>',
                             'electricals' => '<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1-2 1-1 1.5-2.5 1.5-3.5C17.5 5.5 15 3 12 3S6.5 5.5 6.5 8.5c0 1 .5 2.5 1.5 3.5.3.3.8 1 1 2"/><path d="M9 14h6"/><path d="M12 14v7"/></svg>',
                             'carpentry' => '<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 14H9l-3 4h12l-3-4Z"/><path d="M9.5 14 12 4 14.5 14"/><path d="M13 14v2"/><path d="M11 14v2"/></svg>',
+                            'civil_works' => '<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20 12 4l10 16Z"/><path d="M12 12v4"/><path d="M12 18v.01"/></svg>',
+                            'painting' => '<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M5 6h14"/><path d="M7 6v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6"/><path d="M9 10h6"/><path d="M9 14h6"/></svg>',
+                            'tiling' => '<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4z"/><path d="M14 4h6v6h-6z"/><path d="M4 14h6v6H4z"/><path d="M14 14h6v6h-6z"/></svg>',
+                            'roofing' => '<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 12h3v8h14v-8h3L12 2z"/><path d="M12 16v-4"/></svg>',
+                            'landscaping' => '<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22V2h20v20H2z"/><path d="M6 22V12"/><path d="M10 22V8"/><path d="M14 22v-6"/><path d="M18 22V4"/></svg>',
                         ];
                     @endphp
                     <div class="space-y-3">

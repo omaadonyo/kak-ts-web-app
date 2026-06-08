@@ -22,7 +22,7 @@ new #[Title('Book a Service')] class extends Component {
     public function rules(): array
     {
         $rules = [
-            'service_type' => ['required', 'in:plumbing,electricals,carpentry'],
+            'service_type' => ['required', 'in:plumbing,electricals,carpentry,civil_works,painting,tiling,roofing,landscaping'],
             'location' => ['required', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'photos' => ['required', 'array', 'min:2', 'max:5'],
@@ -53,8 +53,8 @@ new #[Title('Book a Service')] class extends Component {
     public function goStep(int $s): void
     {
         if ($s < $this->step) { $this->step = $s; return; }
-        if ($s === 2) { $this->validate(['service_type' => ['required', 'in:plumbing,electricals,carpentry']]); }
-        if ($s === 3) { $this->validate(['service_type' => ['required', 'in:plumbing,electricals,carpentry'], 'location' => ['required', 'string', 'max:255']]); }
+        if ($s === 2) { $this->validate(['service_type' => ['required', 'in:plumbing,electricals,carpentry,civil_works,painting,tiling,roofing,landscaping']]); }
+        if ($s === 3) { $this->validate(['service_type' => ['required', 'in:plumbing,electricals,carpentry,civil_works,painting,tiling,roofing,landscaping'], 'location' => ['required', 'string', 'max:255']]); }
         $this->step = $s;
     }
 
@@ -149,46 +149,83 @@ new #[Title('Book a Service')] class extends Component {
 
             <form wire:submit="save" class="space-y-6">
 
-                @if ($step === 1)
+                 @if ($step === 1)
+                    @php
+                        $allServices = [
+                            ['value' => 'plumbing', 'label' => 'Plumbing', 'desc' => 'Pipes, faucets, drains &amp; water systems', 'color' => 'blue', 'icon' => '<path d="M12 22a8 8 0 0 0 8-8c0-4.42-3.58-8-8-8-3.5 0-6.5 2.25-7.5 5.5C3.5 14 6 16.5 9.5 16.5c2 0 3.75-.83 5-2.17"/><path d="M9.5 16.5c-1.5 0-2.5-1-3-2"/><path d="M12 6v2"/><path d="M14 8h-4"/>'],
+                            ['value' => 'electricals', 'label' => 'Electricals', 'desc' => 'Wiring, switches, lights &amp; power', 'color' => 'amber', 'icon' => '<path d="M15 14c.2-1 .7-1.7 1-2 1-1 1.5-2.5 1.5-3.5C17.5 5.5 15 3 12 3S6.5 5.5 6.5 8.5c0 1 .5 2.5 1.5 3.5.3.3.8 1 1 2"/><path d="M9 14h6"/><path d="M12 14v7"/>'],
+                            ['value' => 'carpentry', 'label' => 'Carpentry', 'desc' => 'Furniture, shelves, repairs &amp; woodwork', 'color' => 'emerald', 'icon' => '<path d="M13 14H9l-3 4h12l-3-4Z"/><path d="M9.5 14 12 4 14.5 14"/><path d="M13 14v2"/><path d="M11 14v2"/>'],
+                            ['value' => 'civil_works', 'label' => 'Civil Works', 'desc' => 'Excavation, concreting, blockwork &amp; site prep', 'color' => 'violet', 'icon' => '<path d="M2 20 12 4l10 16Z"/><path d="M12 12v4"/><path d="M12 18v.01"/>'],
+                            ['value' => 'painting', 'label' => 'Painting', 'desc' => 'Interior &amp; exterior painting, finishes', 'color' => 'pink', 'icon' => '<path d="M10 2v2"/><path d="M14 2v2"/><path d="M5 6h14"/><path d="M7 6v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6"/><path d="M9 10h6"/><path d="M9 14h6"/>'],
+                            ['value' => 'tiling', 'label' => 'Tiling', 'desc' => 'Floor &amp; wall tiling, grouting, repairs', 'color' => 'cyan', 'icon' => '<path d="M4 4h6v6H4z"/><path d="M14 4h6v6h-6z"/><path d="M4 14h6v6H4z"/><path d="M14 14h6v6h-6z"/>'],
+                            ['value' => 'roofing', 'label' => 'Roofing', 'desc' => 'Roof installation, repairs &amp; waterproofing', 'color' => 'orange', 'icon' => '<path d="M12 2 2 12h3v8h14v-8h3L12 2z"/><path d="M12 16v-4"/>'],
+                            ['value' => 'landscaping', 'label' => 'Landscaping', 'desc' => 'Garden design, paving, fencing &amp; drainage', 'color' => 'green', 'icon' => '<path d="M2 22V2h20v20H2z"/><path d="M6 22V12"/><path d="M10 22V8"/><path d="M14 22v-6"/><path d="M18 22V4"/>'],
+                        ];
+                        $colorBgMap = ['blue' => 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400', 'amber' => 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400', 'emerald' => 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400', 'violet' => 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400', 'pink' => 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400', 'cyan' => 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400', 'orange' => 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400', 'green' => 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'];
+                    @endphp
                     <div class="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700/50 shadow-sm p-6 md:p-8">
                         <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-1">What do you need help with?</h2>
                         <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">Choose the type of service you require.</p>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <label class="relative flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 cursor-pointer transition-all duration-200 has-[:checked]:border-zinc-900 dark:has-[:checked]:border-zinc-300 has-[:checked]:bg-zinc-50 dark:has-[:checked]:bg-zinc-700/50 hover:border-zinc-400 dark:hover:border-zinc-500 hover:shadow-sm text-center"
-                                   x-data>
-                                <input type="radio" name="service_type" value="plumbing" wire:model="service_type" class="sr-only">
-                                <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 dark:text-blue-400"><path d="M12 22a8 8 0 0 0 8-8c0-4.42-3.58-8-8-8-3.5 0-6.5 2.25-7.5 5.5C3.5 14 6 16.5 9.5 16.5c2 0 3.75-.83 5-2.17"/><path d="M9.5 16.5c-1.5 0-2.5-1-3-2"/><path d="M12 6v2"/><path d="M14 8h-4"/></svg>
+                        <div x-data="{
+                            currentIndex: 0,
+                            visibleCount: 3,
+                            itemWidth: 0,
+                            get totalSlides() { return Math.ceil(@js($allServices).length / this.visibleCount); },
+                            get maxIndex() { return Math.max(0, @js($allServices).length - this.visibleCount); },
+                            prev() { this.currentIndex = Math.max(0, this.currentIndex - this.visibleCount); },
+                            next() { this.currentIndex = Math.min(this.maxIndex, this.currentIndex + this.visibleCount); },
+                            goTo(dot) { this.currentIndex = dot * this.visibleCount; },
+                            init() {
+                                this.$nextTick(() => {
+                                    const container = this.$el.querySelector('.carousel-track');
+                                    if (container && container.firstElementChild) {
+                                        const gap = parseFloat(getComputedStyle(container).gap) || 12;
+                                        this.itemWidth = container.firstElementChild.offsetWidth + gap;
+                                    }
+                                });
+                            }
+                        }" class="relative">
+                            <div class="overflow-hidden">
+                                <div class="carousel-track flex gap-3 transition-transform duration-300 ease-in-out"
+                                     :style="'transform: translateX(-' + (currentIndex * itemWidth) + 'px)'">
+                                    @foreach ($allServices as $svc)
+                                        <label class="relative flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 cursor-pointer transition-all duration-200 has-[:checked]:border-zinc-900 dark:has-[:checked]:border-zinc-300 has-[:checked]:bg-zinc-50 dark:has-[:checked]:bg-zinc-700/50 hover:border-zinc-400 dark:hover:border-zinc-500 hover:shadow-sm text-center min-w-0 shrink-0"
+                                               style="width: calc((100% - 24px) / 3)" x-ref="card">
+                                            <input type="radio" name="service_type" value="{{ $svc['value'] }}" wire:model="service_type" class="sr-only" id="svc-{{ $svc['value'] }}">
+                                            <div class="w-12 h-12 rounded-xl {{ $colorBgMap[$svc['color']] }} flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">{!! $svc['icon'] !!}</svg>
+                                            </div>
+                                            <div>
+                                                <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{{ $svc['label'] }}</span>
+                                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">{!! $svc['desc'] !!}</p>
+                                            </div>
+                                        </label>
+                                    @endforeach
                                 </div>
-                                <div>
-                                    <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Plumbing</span>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">Pipes, faucets, drains &amp; water systems</p>
+                            </div>
+
+                            <div class="flex items-center justify-between mt-6">
+                                <button type="button" x-on:click="prev()" :disabled="currentIndex === 0"
+                                        class="p-2 rounded-lg border border-zinc-200 dark:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                        :class="currentIndex === 0 ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-600 dark:text-zinc-400'">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                </button>
+                                <div class="flex gap-1.5">
+                                    <template x-for="(_, dotIdx) in Array.from({length: totalSlides})" :key="dotIdx">
+                                        <button type="button" x-on:click="goTo(dotIdx)"
+                                                class="w-2 h-2 rounded-full transition-all duration-300"
+                                                :class="Math.floor(currentIndex / visibleCount) === dotIdx ? 'bg-zinc-800 dark:bg-zinc-200 w-5' : 'bg-zinc-300 dark:bg-zinc-600'"></button>
+                                    </template>
                                 </div>
-                            </label>
-                            <label class="relative flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 cursor-pointer transition-all duration-200 has-[:checked]:border-zinc-900 dark:has-[:checked]:border-zinc-300 has-[:checked]:bg-zinc-50 dark:has-[:checked]:bg-zinc-700/50 hover:border-zinc-400 dark:hover:border-zinc-500 hover:shadow-sm text-center"
-                                   x-data>
-                                <input type="radio" name="service_type" value="electricals" wire:model="service_type" class="sr-only">
-                                <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600 dark:text-amber-400"><path d="M15 14c.2-1 .7-1.7 1-2 1-1 1.5-2.5 1.5-3.5C17.5 5.5 15 3 12 3S6.5 5.5 6.5 8.5c0 1 .5 2.5 1.5 3.5.3.3.8 1 1 2"/><path d="M9 14h6"/><path d="M12 14v7"/></svg>
-                                </div>
-                                <div>
-                                    <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Electricals</span>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">Wiring, switches, lights &amp; power</p>
-                                </div>
-                            </label>
-                            <label class="relative flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 cursor-pointer transition-all duration-200 has-[:checked]:border-zinc-900 dark:has-[:checked]:border-zinc-300 has-[:checked]:bg-zinc-50 dark:has-[:checked]:bg-zinc-700/50 hover:border-zinc-400 dark:hover:border-zinc-500 hover:shadow-sm text-center"
-                                   x-data>
-                                <input type="radio" name="service_type" value="carpentry" wire:model="service_type" class="sr-only">
-                                <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600 dark:text-emerald-400"><path d="M13 14H9l-3 4h12l-3-4Z"/><path d="M9.5 14 12 4 14.5 14"/><path d="M13 14v2"/><path d="M11 14v2"/></svg>
-                                </div>
-                                <div>
-                                    <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Carpentry</span>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">Furniture, shelves, repairs &amp; woodwork</p>
-                                </div>
-                            </label>
+                                <button type="button" x-on:click="next()" :disabled="currentIndex >= maxIndex"
+                                        class="p-2 rounded-lg border border-zinc-200 dark:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                        :class="currentIndex >= maxIndex ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-600 dark:text-zinc-400'">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                </button>
+                            </div>
                         </div>
+
                         @error('service_type')
                             <p class="mt-3 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                         @enderror

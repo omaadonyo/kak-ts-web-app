@@ -63,3 +63,58 @@
 
 **Commands**:
 - `npm run build`
+
+### 2026-06-08 — Fix quotation dynamic totals, tech quotation access
+
+**Goal**: Fix quotation line-item totals not updating dynamically when quantity/unit-price changed. Confirm technician role can access and add assessments + quotations.
+
+**Root cause**: `updatedLineItems()` Livewire hook does not fire for nested array property changes (`lineItems.0.quantity`), so per-item totals stayed at 0 until add/remove.
+
+**Fix**: Removed `updatedLineItems()` from all three files. Subtotal computed property now derives from `quantity × unit_price` directly. View displays computed total inline. Save methods compute `total` per item via `array_map` just before persisting.
+
+**Changes**:
+- `⚡tech-service-action.blade.php` — removed `updatedLineItems()`; `getSubtotalProperty()` computes from raw values; view total column uses inline calculation; `saveQuotation()` builds `$lineItems` with computed totals
+- `⚡assessment-form.blade.php` — same pattern as above
+- `⚡quotation-form.blade.php` — same pattern as above; uses `#[Computed]` for subtotal/tax/grandTotal
+- `AGENTS.md` — session tracking updated
+
+**Commands**:
+- `npm run build`
+
+### 2026-06-08 — Superadmin overhaul: colorful dashboards, service-based sales, login tracking
+
+**Goal**: Overhaul superadmin pages — remove subscriptions, base sales on booked services, make dashboard colorful with tech performance/unassigned/due-overdue projects, track actual user login/logout with session duration.
+
+**Changes**:
+- `routes/web.php` — removed `superadmin.subscriptions` route
+- `resources/views/layouts/app/sidebar.blade.php` — removed Subscriptions sidebar link; renamed Sales to Sales Reports
+- `app/Providers/AppServiceProvider.php` — registered `Login`/`Logout` event listeners for `UserLog` tracking
+- `app/Listeners/LogUserLogin.php` — new listener; creates `UserLog` with action=login, IP, user agent
+- `app/Listeners/LogUserLogout.php` — new listener; creates `UserLog` with action=logout, session duration from last login
+- `⚡superadmin-sales.blade.php` — rewritten: metrics based on `BookService` counts + `Invoice`/`Payment` totals, gradient stat cards, monthly service performance chart, service type breakdown, top clients table
+- `⚡superadmin-dashboard.blade.php` — rewritten: gradient stat cards for users/services/technicians/projects, roles bar chart, service status breakdown, idle technicians list, technician performance table (assigned/assessed/quoted/project/completed + efficiency bar), due & overdue projects panels
+- `⚡superadmin-logs.blade.php` — rewritten: login/logout/active-today/avg-session stat cards, user search, action filter, date range filter, login/logout badge icons, device type indicator (mobile/desktop), IP display, user role shown, empty state illustration
+- `AGENTS.md` — session tracking updated
+
+**Commands**:
+- `npm run build`
+
+### 2026-06-08 — Fix assessment form for techs, fix assign dropdown bug
+
+**Goal**: Fix technician role unable to add assessment at `book-services/{id}/assessment` URL. Fix assign technician dropdown returning empty results.
+
+**Root cause 1**: `$isEditable` was a public property initialized to `false` and only set in `mount()`. If mount didn't fire reliably, it stayed `false` for techs, showing "not completed" message.
+
+**Fix 1**: Replaced `public bool $isEditable = false` with computed `getIsEditableProperty()` that always evaluates `Auth::user()->isAdmin() || Auth::user()->isTechnician()` fresh.
+
+**Root cause 2**: `⚡book-services-list.blade.php:196` queried `User::where('role', 'tech')` but the role is stored as `'technician'` everywhere else.
+
+**Fix 2**: Changed `'tech'` → `'technician'` so the assign dropdown shows technicians.
+
+**Changes**:
+- `⚡assessment-form.blade.php` — removed `$isEditable` public property; added `getIsEditableProperty()` computed property
+- `⚡book-services-list.blade.php` — fixed `role = 'tech'` → `role = 'technician'`
+- `AGENTS.md` — session tracking updated
+
+**Commands**:
+- `npm run build`

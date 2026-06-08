@@ -6,9 +6,14 @@ use App\Models\BookService;
 use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\Quotation;
+use App\Listeners\LogUserLogin;
+use App\Listeners\LogUserLogout;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -28,6 +33,9 @@ class AppServiceProvider extends ServiceProvider
 
     protected function configureDefaults(): void
     {
+        Event::listen(Login::class, LogUserLogin::class);
+        Event::listen(Logout::class, LogUserLogout::class);
+
         Date::use(CarbonImmutable::class);
 
         DB::prohibitDestructiveCommands(
@@ -58,5 +66,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('record-payment', fn ($user, Invoice $i) => $user->isClient() && $i->bookService->user_id === $user->id);
         Gate::define('manage-users', fn ($user) => $user->isAdmin());
         Gate::define('manage-company-users', fn ($user) => $user->isClient() && $user->isCompany());
+        Gate::define('superadmin', fn ($user) => $user->isSuperAdmin());
     }
 }

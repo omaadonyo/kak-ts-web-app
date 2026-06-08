@@ -59,6 +59,28 @@
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
+            @can('superadmin')
+                <flux:sidebar.nav>
+                    <flux:sidebar.group :heading="__('Super Admin')">
+                        <flux:sidebar.item icon="chart-bar" :href="route('superadmin.dashboard')" :current="request()->routeIs('superadmin.dashboard')" wire:navigate>
+                            {{ __('Dashboard') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="users" :href="route('superadmin.users')" :current="request()->routeIs('superadmin.users')" wire:navigate>
+                            {{ __('Users') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="currency-dollar" :href="route('superadmin.sales')" :current="request()->routeIs('superadmin.sales')" wire:navigate>
+                            {{ __('Sales Reports') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="document-text" :href="route('superadmin.logs')" :current="request()->routeIs('superadmin.logs')" wire:navigate>
+                            {{ __('Logs') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="circle-stack" :href="route('superadmin.backups')" :current="request()->routeIs('superadmin.backups*')" wire:navigate>
+                            {{ __('Backups') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                </flux:sidebar.nav>
+            @endcan
+
             <flux:spacer />
 
             <flux:sidebar.nav>

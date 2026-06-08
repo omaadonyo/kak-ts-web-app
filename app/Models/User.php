@@ -40,9 +40,14 @@ class User extends Authenticatable implements PasskeyUser
             ->implode('');
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'superadmin';
+    }
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'admin' || $this->isSuperAdmin();
     }
 
     public function isTechnician(): bool

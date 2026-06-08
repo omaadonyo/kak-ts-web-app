@@ -46,15 +46,8 @@ new #[Title('Quotation')] class extends Component {
         $this->lineItems = array_values($this->lineItems);
     }
 
-    public function updatedLineItems(): void
-    {
-        foreach ($this->lineItems as $i => $item) {
-            $this->lineItems[$i]['total'] = round(($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0), 2);
-        }
-    }
-
     #[Computed]
-    public function subtotal(): float { return round(array_sum(array_column($this->lineItems, 'total')), 2); }
+    public function subtotal(): float { return round(array_sum(array_map(fn($item) => ($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0), $this->lineItems)), 2); }
 
     #[Computed]
     public function taxAmount(): float { return round($this->subtotal * ($this->taxPercent / 100), 2); }
@@ -71,10 +64,11 @@ new #[Title('Quotation')] class extends Component {
             'lineItems.*.unit_price' => ['required', 'numeric', 'min:0'],
         ]);
 
+        $lineItems = array_map(fn($item) => array_merge($item, ['total' => round(($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0), 2)]), $this->lineItems);
         $data = [
             'book_service_id' => $this->bookService->id,
             'assessment_id' => $this->bookService->assessment?->id,
-            'line_items' => $this->lineItems,
+            'line_items' => $lineItems,
             'subtotal' => $this->subtotal,
             'tax' => $this->taxAmount,
             'total' => $this->grandTotal,
@@ -169,7 +163,7 @@ new #[Title('Quotation')] class extends Component {
                                                 <input type="number" step="0.01" min="0" wire:model.live="lineItems.{{ $i }}.unit_price"
                                                        class="w-full border border-zinc-200 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-right text-zinc-800 dark:text-zinc-200 bg-transparent dark:bg-zinc-700/30 focus:outline-none focus:ring-2 focus:ring-zinc-800/20 dark:focus:ring-zinc-400/20 focus:border-zinc-800 dark:focus:border-zinc-400">
                                             </td>
-                                            <td class="p-2 text-right text-sm font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format($item['total'] ?? 0, 2) }}</td>
+                                            <td class="p-2 text-right text-sm font-medium text-zinc-700 dark:text-zinc-300">UGX {{ number_format(($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0), 2) }}</td>
                                             <td class="p-2 text-center">
                                                 @if (count($lineItems) > 1)
                                                     <button type="button" wire:click="removeItem({{ $i }})" class="text-red-400 hover:text-red-600 transition-colors text-lg leading-none">&times;</button>
@@ -211,7 +205,7 @@ new #[Title('Quotation')] class extends Component {
                                     @if ($item['description'])
                                         <div class="flex justify-between text-sm">
                                             <span class="text-zinc-600 dark:text-zinc-400 truncate">{{ $item['description'] }}</span>
-                                            <span class="text-zinc-800 dark:text-zinc-200 font-medium shrink-0 ml-4">UGX {{ number_format($item['total'] ?? 0, 2) }}</span>
+                                            <span class="text-zinc-800 dark:text-zinc-200 font-medium shrink-0 ml-4">UGX {{ number_format(($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0), 2) }}</span>
                                         </div>
                                     @endif
                                 @empty

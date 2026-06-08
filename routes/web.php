@@ -49,6 +49,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('receipts', 'pages::receipts-index')->name('receipts.index');
     Route::livewire('book-services/{bookService}/receipt/create', 'pages::receipt-form')
         ->name('receipts.create');
+
+    Route::livewire('tech/service/{bookService}', 'pages::tech-service-action')
+        ->name('tech.service.action');
+
+    // Super Admin routes
+    Route::prefix('superadmin')->middleware('can:superadmin')->group(function () {
+        Route::livewire('dashboard', 'pages::superadmin-dashboard')->name('superadmin.dashboard');
+    
+        Route::livewire('users', 'pages::superadmin-users')->name('superadmin.users');
+        Route::livewire('sales', 'pages::superadmin-sales')->name('superadmin.sales');
+        Route::livewire('logs', 'pages::superadmin-logs')->name('superadmin.logs');
+        Route::livewire('backups', 'pages::superadmin-backups')->name('superadmin.backups');
+        Route::get('backups/{backup}/download', function (\App\Models\Backup $backup) {
+            return response()->download(storage_path('app/' . $backup->path), $backup->filename);
+        })->name('superadmin.backups.download');
+    });
 });
 
 require __DIR__.'/settings.php';

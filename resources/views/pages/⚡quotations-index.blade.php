@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Invoice;
 use App\Models\Quotation;
+use App\Notifications\InvoiceCreated;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
@@ -64,6 +66,43 @@ new #[Title('Quotations')] class extends Component {
         }
         Flux::toast(variant: 'success', text: 'Quotation accepted. Project has been created.');
         $this->redirect(route('book-services'), navigate: true);
+    }
+
+    public function convertToInvoice(int $id): void
+    {
+        $quotation = Quotation::with('bookService.project')->findOrFail($id);
+        if ($quotation->status !== 'accepted') {
+            Flux::toast(variant: 'warning', text: 'Only accepted quotations can be converted to invoices.');
+            return;
+        }
+        if ($quotation->invoice || $quotation->bookService->invoice) {
+            Flux::toast(variant: 'warning', text: 'An invoice already exists for this quotation.');
+            return;
+        }
+
+        $prefix = 'INV-' . date('Y') . '-';
+        $last = Invoice::where('invoice_number', 'like', $prefix . '%')
+            ->orderBy('invoice_number', 'desc')
+            ->value('invoice_number');
+        $next = $last ? (int) substr($last, strlen($prefix)) + 1 : 1;
+        $invoiceNumber = $prefix . str_pad($next, 5, '0', STR_PAD_LEFT);
+
+        $invoice = Invoice::create([
+            'book_service_id' => $quotation->book_service_id,
+            'project_id' => $quotation->bookService->project?->id,
+            'quotation_id' => $quotation->id,
+            'invoice_number' => $invoiceNumber,
+            'line_items' => $quotation->line_items,
+            'subtotal' => $quotation->subtotal,
+            'tax' => $quotation->tax,
+            'total' => $quotation->total,
+            'status' => 'sent',
+        ]);
+
+        $client = $quotation->bookService->user;
+        $client->notify(new InvoiceCreated($invoice));
+
+        Flux::toast(variant: 'success', text: 'Invoice created and sent to client.');
     }
 
     public function exportCsv()
@@ -224,6 +263,9 @@ new #[Title('Quotations')] class extends Component {
                         @if ($quotation->status === 'sent')
                             <flux:button wire:click="accept({{ $quotation->id }})" size="sm" variant="primary" class="ml-auto">Accept & Start Project</flux:button>
                         @endif
+                        @if ($quotation->status === 'accepted' && !$quotation->bookService->invoice)
+                            <flux:button wire:click="convertToInvoice({{ $quotation->id }})" size="sm" variant="primary" class="ml-auto">Convert to Invoice</flux:button>
+                        @endif
                         @if ($quotation->bookService->invoice)
                             <a href="{{ route('invoices.show', $book->id) }}" wire:navigate class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors ml-auto">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
@@ -248,3 +290,4 @@ new #[Title('Quotations')] class extends Component {
         </div>
     </div>
 </div>
+
